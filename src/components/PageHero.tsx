@@ -8,12 +8,8 @@ export function PageHero({
   body?: string
 }) {
   return (
-    <section className="relative overflow-hidden bg-forest px-6 py-20 text-cream sm:px-8 lg:py-28">
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute -right-24 -top-16 h-72 w-72 rounded-[45%_55%_60%_40%/50%_45%_55%_50%] bg-green/15 blur-3xl"
-      />
-      <div className="relative mx-auto max-w-4xl">
+    <section className="bg-forest px-6 py-20 text-cream sm:px-8 lg:py-28">
+      <div className="mx-auto max-w-7xl">
         <p className="font-display text-sm font-semibold uppercase tracking-[0.15em] text-coral-light">
           {eyebrow}
         </p>

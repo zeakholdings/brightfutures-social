@@ -35,7 +35,7 @@ function AccessibilityPage() {
           </p>
           <p>
             If you run into anything on this site that's hard to use, please
-            tell us &mdash; it helps us fix it. Reach the committee via the{" "}
+            tell us. It helps us fix it. Reach the committee via the{" "}
             <a href="/contact" className="font-semibold text-forest underline">
               contact page
             </a>

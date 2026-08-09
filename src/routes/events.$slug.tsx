@@ -1,0 +1,11 @@
+import { createFileRoute, notFound } from "@tanstack/react-router"
+import { PageHero } from "@/components/PageHero"
+import { getEvent } from "@/lib/cms/server"
+import { safeRichText } from "@/lib/cms/safe-html"
+
+export const Route = createFileRoute("/events/$slug")({
+  loader: async ({ params }) => { const event = await getEvent({ data: { slug: params.slug } }); if (!event) throw notFound(); return event },
+  head: ({ loaderData }) => ({ meta: [{ title: `${loaderData?.title || "Event"} | BrightFutures Greenwich` }, { name: "description", content: loaderData?.description || "BrightFutures Greenwich event details." }, { property: "og:title", content: loaderData?.title || "BrightFutures event" }] }),
+  component: EventPage,
+})
+function EventPage() { const event = Route.useLoaderData(); const date = new Intl.DateTimeFormat("en-GB", { dateStyle: "long", timeStyle: event.startDate?.includes("T") ? "short" : undefined }).format(new Date(event.startDate || "")); return <div><PageHero eyebrow={event.category} title={event.title} body={event.description}/><section className="bg-cream px-6 py-16 sm:px-8 lg:py-24"><article className="mx-auto grid max-w-5xl gap-10 lg:grid-cols-[15rem_1fr]"><aside className="border-t border-forest/25 pt-5 text-forest/70"><p className="font-semibold text-forest">{event.time || date}</p>{event.location ? <p className="mt-3">{event.location}</p> : null}{event.status === "cancelled" ? <p className="mt-5 bg-coral px-3 py-2 font-semibold text-cream">Cancelled</p> : null}{event.registrationUrl && event.status !== "cancelled" ? <a href={event.registrationUrl} className="mt-6 inline-flex bg-forest px-5 py-3 font-semibold text-cream">Register</a> : null}</aside><div>{event.coverImage ? <img src={event.coverImage} alt={event.coverImageAlt || ""} className="mb-8 w-full"/> : null}{event.body ? <div className="prose max-w-none text-forest/75" dangerouslySetInnerHTML={{ __html: safeRichText(event.body) }}/> : null}{event.accessibilityInfo ? <section className="mt-10 border-t border-forest/20 pt-6"><h2 className="font-display text-2xl text-forest">Accessibility</h2><p className="mt-3 whitespace-pre-line text-forest/70">{event.accessibilityInfo}</p></section> : null}</div></article></section></div> }

@@ -23,7 +23,7 @@ function PrivacyPage() {
           <p>
             BrightFutures Greenwich Society is a student-led society and
             takes a minimal approach to data. We only collect what's needed
-            to run the community &mdash; nothing more.
+            to run the society, and nothing more.
           </p>
           <p>
             When you contact us or suggest an idea through this site, we use

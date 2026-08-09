@@ -1,50 +1,10 @@
-import { CalendarDays, MapPin } from "lucide-react"
+import { Link } from "@tanstack/react-router"
 import type { Event } from "@/data/events"
-
-const categoryStyles: Record<Event["category"], string> = {
-  Social: "bg-coral/15 text-coral",
-  Community: "bg-green/15 text-green",
-  "Check-In": "bg-forest/10 text-forest",
-  Opportunity: "bg-coral-light/25 text-forest",
-}
-
-export function EventCard({ event }: { event: Event }) {
-  return (
-    <article className="group flex flex-col gap-4 rounded-2xl bg-paper p-7 shadow-soft ring-1 ring-forest/5 transition-transform hover:-translate-y-1">
-      <div className="flex items-center justify-between gap-3">
-        <span
-          className={`rounded-full px-3 py-1 text-xs font-semibold ${categoryStyles[event.category]}`}
-        >
-          {event.category}
-        </span>
-        <span className="flex items-center gap-1.5 text-sm font-medium text-forest/60">
-          <CalendarDays size={15} />
-          {event.date}
-        </span>
-      </div>
-
-      <h3 className="font-display text-2xl text-forest">{event.title}</h3>
-      <p className="flex-1 leading-relaxed text-forest/70">
-        {event.description}
-      </p>
-
-      <div className="flex items-center gap-1.5 text-sm text-forest/55">
-        <MapPin size={15} />
-        {event.location ?? "Details coming soon"}
-      </div>
-
-      {event.rsvp ? (
-        <a
-          href={event.rsvp}
-          className="mt-1 inline-flex w-fit items-center justify-center rounded-full bg-forest px-5 py-2.5 text-sm font-semibold text-cream transition-colors hover:bg-forest-light"
-        >
-          RSVP
-        </a>
-      ) : (
-        <span className="mt-1 inline-flex w-fit items-center justify-center rounded-full border border-dashed border-forest/25 px-5 py-2.5 text-sm font-medium text-forest/50">
-          RSVP coming soon
-        </span>
-      )}
-    </article>
-  )
+const formatDate = (event: Event) => event.dateLabel || (event.startDate ? new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "long", year: "numeric" }).format(new Date(event.startDate.includes("T") ? event.startDate : `${event.startDate}T12:00:00`)) : "Date coming soon")
+export function EventCard({ event, compact = false }: { event: Event; compact?: boolean }) {
+  return <article className={`border-t border-forest/25 py-6 ${compact ? "lg:grid lg:grid-cols-[10rem_1fr_auto] lg:gap-8" : "flex h-full flex-col"}`}>
+    <div className="text-sm text-forest/65"><p className="font-semibold text-forest">{formatDate(event)}</p>{event.time ? <p className="mt-1">{event.time}</p> : null}<p className="mt-2 uppercase tracking-[0.12em] text-coral">{event.category}</p></div>
+    <div className={compact ? "mt-4 lg:mt-0" : "mt-6 flex flex-1 flex-col"}><h3 className="font-display text-2xl text-forest"><Link to="/events/$slug" params={{ slug: event.slug }} className="hover:text-coral">{event.title}</Link></h3><p className="mt-3 max-w-2xl leading-relaxed text-forest/70">{event.description}</p>{event.location ? <p className="mt-4 text-sm text-forest/55">{event.location}</p> : null}</div>
+    <Link to="/events/$slug" params={{ slug: event.slug }} className="mt-5 inline-flex h-fit w-fit border-b border-forest pb-1 text-sm font-semibold text-forest hover:text-coral lg:mt-0">Details</Link>
+  </article>
 }

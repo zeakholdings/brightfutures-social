@@ -15,7 +15,6 @@
   --color-coral-light: #f2a679;
   --color-ink: #1c231f;
 
-  --shadow-soft: 0 20px 60px -20px rgba(22, 51, 44, 0.25);
 }
 
 html {
@@ -64,12 +63,6 @@ code {
   font-family: Menlo, Monaco, Consolas, "Courier New", monospace;
 }
 
-/* Grain texture overlay, applied only to fixed decorative layers */
-.bf-grain {
-  background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
-  opacity: 0.05;
-}
-
 @keyframes bf-rise {
   from {
     opacity: 0;
@@ -83,18 +76,4 @@ code {
 
 .bf-rise {
   animation: bf-rise 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-
-@keyframes bf-drift {
-  0%,
-  100% {
-    transform: translate(0, 0) rotate(0deg);
-  }
-  50% {
-    transform: translate(14px, -18px) rotate(4deg);
-  }
-}
-
-.bf-drift {
-  animation: bf-drift 14s ease-in-out infinite;
 }

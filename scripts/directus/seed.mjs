@@ -1,0 +1,12 @@
+import { api } from "./lib.mjs"
+const events = [
+ { slug: "greenwich-cares-welcome", start_date: "2026-09-09T12:00:00.000Z", title: "Greenwich Cares Welcome", description: "Meet BrightFutures and find out what the community has planned.", location: "Details coming soon", category: "community", academic_year: "2026/27", status: "confirmed", featured: true },
+ { slug: "find-your-people", start_date: "2026-09-15T12:00:00.000Z", title: "BrightFutures: Find Your People", description: "Come along, meet other students and get to know BrightFutures.", location: "Details coming soon", category: "social", academic_year: "2026/27", status: "confirmed", featured: true },
+]
+const committee = [{ name: "Arshan Mahi", role: "President", academic_year: "2026/27", active: true, display_order: 1 }, { name: "Pragati Sahu", role: "Treasurer & Events and Community Officer", academic_year: "2026/27", active: true, display_order: 2 }, { name: "Faduma Hussain", role: "Communications & Marketing Officer", academic_year: "2026/27", active: true, display_order: 3 }]
+async function upsert(collection, key, record) { const result = await api(`/items/${collection}?filter[${key}][_eq]=${encodeURIComponent(record[key])}&limit=1`); if (result.length) await api(`/items/${collection}/${result[0].id}`, { method: "PATCH", body: JSON.stringify(record) }); else await api(`/items/${collection}`, { method: "POST", body: JSON.stringify(record) }) }
+for (const event of events) await upsert("events", "slug", event)
+for (const member of committee) await upsert("committee", "name", member)
+const settings = { site_name: "BrightFutures Greenwich Society", tagline: "The student-led community for care-experienced and estranged students at the University of Greenwich.", membership_url: "https://www.greenwichsu.co.uk/societies/18691/", contact_email: "hello@brightfutures.social", show_announcement: false, default_seo_title: "BrightFutures Greenwich Society | Care-Experienced & Estranged Student Community", default_seo_description: "BrightFutures is the student-led community for care-experienced and estranged students at the University of Greenwich. Meet people, join events, find opportunities and have your voice heard." }
+const existing = await api("/items/site_settings").catch(() => null); await api("/items/site_settings", { method: existing ? "PATCH" : "POST", body: JSON.stringify(settings) })
+console.log("Real events, committee members and site settings have been seeded idempotently.")

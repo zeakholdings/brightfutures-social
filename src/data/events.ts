@@ -1,100 +1,17 @@
-// Event data lives here for now. Shape is deliberately flat and JSON-serialisable
-// so it can be moved to a CMS or a static JSON/API source later without changing
-// any component code — components only ever consume the `Event` type below.
-
-export type EventCategory = "Social" | "Community" | "Check-In" | "Opportunity"
-
-export interface Event {
-  slug: string
-  date: string // human-readable, since exact times are not always confirmed
-  isoDate?: string // used for sorting when known
-  title: string
-  description: string
-  location?: string
-  category: EventCategory
-  rsvp?: string // link to RSVP form/page; omitted when not yet available
-  past?: boolean
-}
+export type EventCategory = "Social" | "Coffee & Connect" | "Community" | "Opportunity" | "Voice & Advocacy" | "Wellbeing" | "Trips" | "Seasonal"
+export type EventStatus = "confirmed" | "provisional" | "completed" | "cancelled"
+export interface Event { title: string; slug: string; startDate?: string; endDate?: string; time?: string; location?: string; category: EventCategory; description: string; academicYear: string; status: EventStatus; featured: boolean; registrationUrl?: string; dateLabel?: string; body?: string; coverImage?: string; coverImageAlt?: string; accessibilityInfo?: string }
 
 export const events: Event[] = [
-  {
-    slug: "greenwich-cares-welcome",
-    date: "9 September",
-    isoDate: "2026-09-09",
-    title: "Greenwich Cares Welcome",
-    description:
-      "Meet BrightFutures and find out what we're doing this year. A first look at the community before term properly begins.",
-    location: "Details coming soon",
-    category: "Community",
-  },
-  {
-    slug: "find-your-people",
-    date: "15 September",
-    isoDate: "2026-09-15",
-    title: "BrightFutures: Find Your People",
-    description:
-      "Our official 2026/27 Welcome Social. Come and meet the people you'll be spending the year with.",
-    location: "Details coming soon",
-    category: "Social",
-  },
-  {
-    slug: "coffee-and-connect",
-    date: "Late September",
-    title: "Coffee & Connect",
-    description:
-      "A smaller, relaxed space to grab a drink and meet other students. No pressure, just good company.",
-    location: "Details coming soon",
-    category: "Social",
-  },
-  {
-    slug: "settling-in-check-in",
-    date: "Mid-October",
-    title: "Settling In Check-In",
-    description:
-      "How are you, actually? A relaxed space to reconnect once university gets going.",
-    location: "Details coming soon",
-    category: "Check-In",
-  },
-  {
-    slug: "christmas-together",
-    date: "December",
-    title: "BrightFutures Christmas Together",
-    description: "Food, games and an end-of-term celebration.",
-    location: "Details coming soon",
-    category: "Community",
-  },
+  { slug: "greenwich-cares-welcome", startDate: "2026-09-09", title: "Greenwich Cares Welcome", description: "Meet BrightFutures and find out what the community has planned.", location: "Details coming soon", category: "Community", academicYear: "2026/27", status: "confirmed", featured: true },
+  { slug: "find-your-people", startDate: "2026-09-15", title: "BrightFutures: Find Your People", description: "Come along, meet other students and get to know BrightFutures.", location: "Details coming soon", category: "Social", academicYear: "2026/27", status: "confirmed", featured: true },
+  { slug: "coffee-and-connect", dateLabel: "Late September", title: "Coffee & Connect", description: "A relaxed chance to grab a drink and meet other students.", location: "Details coming soon", category: "Coffee & Connect", academicYear: "2026/27", status: "provisional", featured: true },
+  { slug: "settling-in-check-in", dateLabel: "Mid-October", title: "Settling In Check-In", description: "A low-key chance to reconnect once university gets going.", location: "Details coming soon", category: "Wellbeing", academicYear: "2026/27", status: "provisional", featured: false },
+  { slug: "christmas-together", dateLabel: "December", title: "BrightFutures Christmas Together", description: "Food, games and an end-of-term get-together.", location: "Details coming soon", category: "Seasonal", academicYear: "2026/27", status: "provisional", featured: false },
 ]
-
-export const journey = [
-  {
-    month: "September",
-    verb: "Belong",
-    description: "Welcome events and new connections.",
-  },
-  {
-    month: "October",
-    verb: "Settle",
-    description: "Check-ins and navigating university life.",
-  },
-  {
-    month: "November",
-    verb: "Connect",
-    description: "Social activities and opportunities.",
-  },
-  {
-    month: "December",
-    verb: "Celebrate",
-    description: "End-of-term community and Christmas event.",
-  },
-] as const
-
-export const ideaCards = [
-  "More socials",
-  "Trips",
-  "Careers and employability",
-  "Wellbeing activities",
-  "Campaigns and advocacy",
-  "Creative projects",
-  "Workshops",
-  "Coffee meet-ups",
-] as const
+const dateValue = (event: Event) => event.startDate ? new Date(event.startDate.includes("T") ? event.startDate : `${event.startDate}T23:59:59`).getTime() : Number.MAX_SAFE_INTEGER
+export function isUpcoming(event: Event, now = new Date()) { if (event.status === "completed" || event.status === "cancelled") return false; return !event.startDate || dateValue(event) >= now.getTime() }
+export function upcomingEvents(now = new Date()) { return events.filter((event) => isUpcoming(event, now)).sort((a, b) => dateValue(a) - dateValue(b)) }
+export function pastEvents(now = new Date()) { return events.filter((event) => event.status === "completed" || (!!event.startDate && dateValue(event) < now.getTime())).sort((a, b) => dateValue(b) - dateValue(a)) }
+export const activityThemes = [["Welcome", "Helping new and returning students find their feet."], ["Social", "Coffee, food, activities, trips and things people actually want to do."], ["Connect", "Meeting people and building friendships."], ["Opportunity", "Careers, skills, projects, workshops and collaborations."], ["Voice", "Advocacy, campaigns and helping improve Greenwich."], ["Celebrate", "Community moments, seasonal events and end-of-year activities."]] as const
+export const ideaCards = ["Socials", "Trips", "Food", "Careers", "Workshops", "Campaigns", "Creative projects", "Something else"] as const

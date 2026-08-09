@@ -1,48 +1,52 @@
 # BrightFutures Greenwich
 
-Website for BrightFutures Greenwich Society — the student-led community for
-care-experienced and estranged students at the University of Greenwich.
+TanStack Start website for the student-led BrightFutures Greenwich Society. Public content is managed in Directus 11 at `cms.brightfutures.social`, while the existing local event and settings data provide safe fallbacks during migration or a short CMS outage.
 
-## Tech stack
-
-- [TanStack Start](https://tanstack.com/start) (React 19, file-based routing via TanStack Router)
-- Vite 7
-- Tailwind CSS 4
-- Deployed on Netlify, with Netlify Forms handling the contact form
-
-## Running locally
+## Local development
 
 ```bash
 npm install
+cp .env.example .env
 npm run dev
 ```
 
-The dev server runs on port 3000 by default (Netlify Dev proxies it on 8888 if
-you use `netlify dev`).
+`DIRECTUS_URL` is used for anonymous published-content reads. `DIRECTUS_SERVER_TOKEN` is a dedicated runtime server credential with create-only access to `contact_messages` and `ideas`. It is never sent to the browser. `DIRECTUS_ADMIN_TOKEN` is needed only by the setup and seed scripts and must not use a `VITE_` or `PUBLIC_` prefix.
+
+## CMS setup
+
+Run these commands once for a new Directus environment and safely repeat them after schema changes:
 
 ```bash
-npm run build
+DIRECTUS_URL=https://cms.brightfutures.social DIRECTUS_ADMIN_TOKEN='...' npm run cms:setup
+DIRECTUS_URL=https://cms.brightfutures.social DIRECTUS_ADMIN_TOKEN='...' npm run cms:seed
 ```
 
-builds the production bundle to `dist/client`.
+The setup script creates or updates the collections and anonymous filtered read permissions. It explicitly removes anonymous permissions from contact messages and ideas. It does not create environment-specific users. Configure a dedicated runtime policy with create-only access to `contact_messages` and `ideas`, issue its static token as `DIRECTUS_SERVER_TOKEN`, and follow [scripts/directus/README.md](scripts/directus/README.md) for editor policies.
 
-## Content structure
+The seed is idempotent. It imports the two confirmed dated events, the three real committee members and confirmed site settings. It does not create posts, resources, biographies, photos or provisional placeholder events.
 
-- `src/data/site.ts` — site-wide constants: nav links, footer links, contact email, social placeholders.
-- `src/data/events.ts` — event listings and the "This year at BrightFutures" timeline. This is a plain
-  typed array today; the shape is deliberately flat and JSON-serialisable so it can move to a CMS or a
-  JSON/API source later without changing any component.
-- `src/routes/` — one file per page (file-based routing).
-- `src/components/` — shared UI (`Header`, `Footer`, `EventCard`, `PageHero`).
+## Publishing content
+
+- Add an event in **Events**, give it a unique slug and date, then set status to `confirmed`. Draft and provisional records are not public. Cancelled records remain available at their detail URL with a clear notice.
+- Add an article in **Posts**, provide a unique slug and publication date, then set status to `published`. Future-dated and non-published posts are excluded.
+- Update current members in **Committee**. Inactive members are excluded. Photos and biographies are optional.
+- Update membership, announcement, contact and social links in the **Site Settings** singleton.
+- Publish only verified resources. Empty resources and stories sections show a quiet empty state.
+
+Rich text is sanitised before rendering. CMS lists are fetched by route loaders on the server and cached briefly. Directus asset IDs are converted to public asset URLs in the server layer.
 
 ## Forms
 
-The contact form uses Netlify Forms. Because it's rendered client-side by React, a static skeleton form
-lives at `public/__forms.html` purely so Netlify's build-time scanner registers the form — it's never shown
-to users. Form submissions only work once deployed (not in local dev).
+The contact and homepage idea forms call TanStack server functions. Both use schema validation, strict maximum lengths, a honeypot and per-IP rate limiting. Contact messages are stored with a one-way IP hash and limited user-agent data. Ideas may be anonymous. Neither collection has anonymous read access. Email notification is intentionally not configured; Directus stores submissions first and notification can be added later with a Directus Flow.
 
-## Notes
+The in-process limiter is suitable for the current single Hestia process. If the site is later scaled to multiple instances, replace it with a shared Redis-backed limiter.
 
-- No analytics or tracking scripts are included. The site is cookie-free by default.
-- Placeholder content (committee names, social links, exact event times/locations) is clearly marked as
-  "to be confirmed" / "details coming soon" rather than invented.
+## Checks and deployment
+
+```bash
+npm run typecheck
+npm run build
+npm run start
+```
+
+The production server listens on port 6090. No analytics or trackers are included.
