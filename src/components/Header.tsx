@@ -12,10 +12,15 @@ export function Header() {
       <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 sm:px-8">
         <Link
           to="/"
-          className="font-display text-xl font-semibold tracking-tight text-forest"
+          className="flex shrink-0 items-center"
           onClick={() => setOpen(false)}
+          aria-label="BrightFutures home"
         >
-          Bright<span className="text-coral">Futures</span>
+          <img
+            src="/BrightFutures%20Logo%20transparent.png"
+            alt="BrightFutures"
+            className="h-14 w-auto sm:h-16"
+          />
         </Link>
 
         <nav

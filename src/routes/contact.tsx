@@ -1,15 +1,55 @@
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { createFileRoute } from "@tanstack/react-router"
 import { useServerFn } from "@tanstack/react-start"
 import { CheckCircle2, Mail } from "lucide-react"
 import { PageHero } from "@/components/PageHero"
 import { getSettings, submitContact } from "@/lib/cms/server"
 
-export const Route = createFileRoute("/contact")({ loader: () => getSettings(), head: () => ({ meta: [{ title: "Contact | BrightFutures Greenwich" }, { name: "description", content: "Get in touch with the BrightFutures committee: ask a question, share an idea, or find out how to get involved." }, { property: "og:title", content: "Contact | BrightFutures Greenwich" }] }), component: ContactPage })
+export const Route = createFileRoute("/contact")({
+  loader: () => getSettings(),
+  head: () => ({
+    meta: [
+      { title: "Contact | BrightFutures Greenwich" },
+      { name: "description", content: "Get in touch with the BrightFutures committee: ask a question, share an idea, or find out how to get involved." },
+      { property: "og:title", content: "Contact | BrightFutures Greenwich" },
+    ],
+  }),
+  component: ContactPage,
+})
+
 type Fields = { name: string; email: string; subject: string; message: string; website: string }
 const empty: Fields = { name: "", email: "", subject: "", message: "", website: "" }
-function ContactPage() { const settings = Route.useLoaderData(); const send = useServerFn(submitContact); const [fields, setFields] = useState(empty); const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle")
- const change = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => setFields(f => ({ ...f, [e.target.name]: e.target.value }))
- const submit = async (e: React.FormEvent) => { e.preventDefault(); setStatus("sending"); try { await send({ data: fields }); setStatus("sent"); setFields(empty) } catch { setStatus("error") } }
- return <div><PageHero eyebrow="Contact" title="Talk to the committee." body="Use this form to ask a question, share an idea or offer to help. Your message goes to the students running BrightFutures."/><section className="bg-cream px-6 py-20 sm:px-8 lg:py-28"><div className="mx-auto grid max-w-6xl gap-16 lg:grid-cols-[1fr_1.2fr]"><div><h2 className="font-display text-2xl text-forest">Prefer email?</h2>{settings.contact_email ? <a href={`mailto:${settings.contact_email}`} className="mt-3 inline-flex items-center gap-2 font-semibold text-forest hover:text-coral"><Mail size={18}/>{settings.contact_email}</a> : null}<p className="mt-6 max-w-sm leading-relaxed text-forest/65">We aim to reply within a few days during term time. Nothing you send here is shared beyond the committee.</p><p className="mt-6 max-w-sm text-sm leading-relaxed text-forest/50">This form is for general enquiries only. We don’t ask about care or estrangement status here. You never need to disclose that to reach us.</p></div><div>{status === "sent" ? <div role="status" className="flex flex-col items-start gap-3 rounded-2xl bg-cream-dim p-8"><CheckCircle2 size={32} className="text-green"/><h3 className="font-display text-2xl text-forest">Message sent</h3><p className="leading-relaxed text-forest/70">Thanks for getting in touch. Someone from the committee will get back to you soon.</p></div> : <form onSubmit={submit} className="flex flex-col gap-5"><div className="hidden" aria-hidden="true"><label>Website<input name="website" value={fields.website} onChange={change} tabIndex={-1} autoComplete="off"/></label></div><div className="grid gap-5 sm:grid-cols-2"><Field label="Name" name="name" value={fields.name} onChange={change} maxLength={120}/><Field label="University email" name="email" type="email" value={fields.email} onChange={change} maxLength={254}/></div><Field label="Subject" name="subject" value={fields.subject} onChange={change} maxLength={180}/><label className="flex flex-col gap-1.5 text-sm font-semibold text-forest">Message<textarea name="message" rows={6} required minLength={10} maxLength={5000} value={fields.message} onChange={change} className="rounded-xl border border-forest/20 bg-paper px-4 py-3 font-normal outline-none focus:border-coral"/></label><button type="submit" disabled={status === "sending"} className="mt-2 w-fit rounded-full bg-coral px-7 py-3 font-semibold text-cream disabled:opacity-60">{status === "sending" ? "Sending…" : "Send message"}</button>{status === "error" ? <p role="alert" className="text-sm text-coral">We couldn’t send your message. Please try again or email us directly.</p> : null}</form>}</div></div></section></div> }
-function Field({ label, name, type = "text", value, onChange, maxLength }: { label: string; name: string; type?: string; value: string; onChange: (e: React.ChangeEvent<HTMLInputElement>) => void; maxLength: number }) { return <label className="flex flex-col gap-1.5 text-sm font-semibold text-forest">{label}<input name={name} type={type} required maxLength={maxLength} value={value} onChange={onChange} className="rounded-xl border border-forest/20 bg-paper px-4 py-3 font-normal outline-none focus:border-coral"/></label> }
+
+function ContactPage() {
+  const settings = Route.useLoaderData()
+  const send = useServerFn(submitContact)
+  const [fields, setFields] = useState(empty)
+  const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle")
+  const feedbackRef = useRef<HTMLDivElement | HTMLParagraphElement>(null)
+
+  useEffect(() => {
+    if (status === "sent" || status === "error") feedbackRef.current?.focus()
+  }, [status])
+
+  const change = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    setFields((current) => ({ ...current, [e.target.name]: e.target.value }))
+    if (status === "error") setStatus("idle")
+  }
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setStatus("sending")
+    try {
+      await send({ data: fields })
+      setStatus("sent")
+      setFields(empty)
+    } catch {
+      setStatus("error")
+    }
+  }
+
+  return <div><PageHero eyebrow="Contact" title="Talk to the committee." body="Use this form to ask a question, share an idea or offer to help. Your message goes to the students running BrightFutures."/><section className="bg-cream px-6 py-20 sm:px-8 lg:py-28"><div className="mx-auto grid max-w-6xl gap-16 lg:grid-cols-[1fr_1.2fr]"><div><h2 className="font-display text-2xl text-forest">Prefer email?</h2>{settings.contact_email ? <a href={`mailto:${settings.contact_email}`} className="mt-3 inline-flex min-h-11 items-center gap-2 font-semibold text-forest hover:text-coral"><Mail size={18} aria-hidden="true"/>{settings.contact_email}</a> : null}<p className="mt-6 max-w-sm leading-relaxed text-forest/65">We aim to reply within a few days during term time. Your message is stored securely so the committee can respond.</p><p className="mt-6 max-w-sm text-sm leading-relaxed text-forest/50">This form is for general enquiries only. We don’t ask about care or estrangement status here. You never need to disclose that to reach us.</p></div><div>{status === "sent" ? <div ref={feedbackRef} tabIndex={-1} role="status" className="flex flex-col items-start gap-3 rounded-2xl bg-cream-dim p-8"><CheckCircle2 size={32} className="text-green" aria-hidden="true"/><h2 className="font-display text-2xl text-forest">Message sent</h2><p className="leading-relaxed text-forest/70">Thanks for getting in touch. Your message has been saved for the committee, who will get back to you soon.</p></div> : <form onSubmit={submit} className="flex flex-col gap-5"><p className="text-sm text-forest/65">All fields are required.</p><div className="hidden" aria-hidden="true"><label>Website<input name="website" value={fields.website} onChange={change} tabIndex={-1} autoComplete="off"/></label></div><div className="grid gap-5 sm:grid-cols-2"><Field label="Name" name="name" autoComplete="name" value={fields.name} onChange={change} maxLength={120}/><Field label="Email address" name="email" type="email" autoComplete="email" value={fields.email} onChange={change} maxLength={254}/></div><Field label="Subject" name="subject" value={fields.subject} onChange={change} maxLength={180}/><label className="flex flex-col gap-1.5 text-sm font-semibold text-forest">Message<textarea name="message" rows={6} required minLength={10} maxLength={5000} value={fields.message} onChange={change} aria-describedby="message-help" className="rounded-xl border border-forest/20 bg-paper px-4 py-3 font-normal outline-none focus:border-coral"/><span id="message-help" className="font-normal text-forest/55">At least 10 characters.</span></label><button type="submit" disabled={status === "sending"} className="mt-2 min-h-11 w-fit rounded-full bg-coral px-7 py-3 font-semibold text-cream disabled:opacity-60">{status === "sending" ? "Sending…" : "Send message"}</button>{status === "error" ? <p ref={feedbackRef} tabIndex={-1} role="alert" className="text-sm text-coral">We couldn’t save your message. Your entries are still here, so you can try again.{settings.contact_email ? <> If the problem continues, email us at <a className="font-semibold underline" href={`mailto:${settings.contact_email}`}>{settings.contact_email}</a>.</> : " Please try again later."}</p> : null}</form>}</div></div></section></div>
+}
+
+function Field({ label, name, type = "text", autoComplete, value, onChange, maxLength }: { label: string; name: string; type?: string; autoComplete?: string; value: string; onChange: (e: React.ChangeEvent<HTMLInputElement>) => void; maxLength: number }) {
+  return <label className="flex flex-col gap-1.5 text-sm font-semibold text-forest">{label}<input name={name} type={type} autoComplete={autoComplete} required maxLength={maxLength} value={value} onChange={onChange} className="rounded-xl border border-forest/20 bg-paper px-4 py-3 font-normal outline-none focus:border-coral"/></label>
+}

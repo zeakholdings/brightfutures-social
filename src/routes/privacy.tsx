@@ -1,57 +1,52 @@
-import { createFileRoute } from "@tanstack/react-router"
+import { createFileRoute, Link } from "@tanstack/react-router"
 import { PageHero } from "@/components/PageHero"
 
 export const Route = createFileRoute("/privacy")({
-  head: () => ({
-    meta: [
-      { title: "Privacy | BrightFutures Greenwich" },
-      {
-        name: "description",
-        content: "How BrightFutures Greenwich Society handles your information.",
-      },
-    ],
-  }),
+  head: () => ({ meta: [
+    { title: "Privacy Policy | BrightFutures HQ" },
+    { name: "description", content: "How BrightFutures HQ and Vibes in Care CIC handle personal information." },
+  ] }),
   component: PrivacyPage,
 })
 
+const list = "mt-3 list-disc space-y-2 pl-6"
+const section = "space-y-3"
+
 function PrivacyPage() {
-  return (
-    <div>
-      <PageHero eyebrow="Privacy" title="How we handle your information." />
-      <section className="bg-cream px-6 py-20 sm:px-8 lg:py-28">
-        <div className="mx-auto max-w-3xl space-y-6 leading-relaxed text-forest/75">
-          <p>
-            BrightFutures Greenwich Society is a student-led society and
-            takes a minimal approach to data. We only collect what's needed
-            to run the society, and nothing more.
-          </p>
-          <p>
-            When you contact us or suggest an idea through this site, we use
-            the name, email and message you provide solely to respond to you
-            and, where you've opted in, to keep you updated about
-            BrightFutures events. We don't sell or share this information
-            with third parties.
-          </p>
-          <p>
-            Our contact form never asks about care status, estrangement
-            status, or other sensitive personal information, and you're
-            never required to disclose your background to reach us or join
-            the society.
-          </p>
-          <p>
-            This site is cookie-free by default and does not use tracking
-            analytics. If that ever changes, this page will be updated
-            first.
-          </p>
-          <p>
-            For questions about your data, contact the committee via the{" "}
-            <a href="/contact" className="font-semibold text-forest underline">
-              contact page
-            </a>
-            .
-          </p>
-        </div>
-      </section>
-    </div>
-  )
+  return <div><PageHero title="Privacy Policy" body="Last updated: 11 August 2026" />
+    <article className="bg-cream px-6 py-20 sm:px-8 lg:py-28"><div className="mx-auto max-w-3xl space-y-10 leading-relaxed text-forest/75">
+      <LegalSection title="Who operates this service"><p>BrightFutures HQ is an independent community platform supporting BrightFutures Society and its community.</p><p>BrightFutures HQ is a project of <strong>Vibes in Care CIC</strong>. Vibes in Care CIC is legally responsible for operating BrightFutures HQ and is the data controller for personal information processed through this website and its services.</p><p>The BrightFutures HQ team manages the platform and may process information on behalf of Vibes in Care CIC where this is necessary to operate the service.</p><p>BrightFutures HQ is independent from the University of Greenwich and Greenwich Students&apos; Union. Neither BrightFutures HQ nor the Community Check-In is a University of Greenwich or Greenwich Students&apos; Union service.</p><p>Official BrightFutures Society membership is separate. Membership information collected through Greenwich Students&apos; Union is handled by the Students&apos; Union under its own privacy information. BrightFutures HQ does not receive that membership data through the Community Check-In.</p></LegalSection>
+
+      <LegalSection title="Information you send us and why we use it"><p>UK data protection law requires us to explain what personal information we process, why we use it and the lawful basis on which we rely.</p><Subheading>Contact form</Subheading><p>The contact form collects your name, email address, subject and message so that the BrightFutures HQ team can read and respond to your enquiry.</p><p>We process this information on the basis of legitimate interests under Article 6(1)(f) UK GDPR. Responding to people who contact us is necessary for the effective operation of the service and normally presents a low risk to your rights and interests.</p><p>You can object to this processing by contacting us.</p><Subheading>Idea form</Subheading><p>The idea form collects the idea you submit and, if you choose to provide them, your name and email address.</p><p>We process this information on the basis of legitimate interests under Article 6(1)(f) UK GDPR. Receiving and considering ideas submitted voluntarily by members of the community helps us develop the service and community.</p><p>Providing your name and email address is optional.</p><Subheading>Community Check-In</Subheading><p>The Community Check-In allows you to voluntarily share reflections about matters such as:</p><ul className={list}><li>highlights or achievements;</li><li>things you are proud of;</li><li>goals or challenges;</li><li>ideas for BrightFutures; and</li><li>issues you think the community or Society should raise.</li></ul><p>Your name and email address are optional.</p><p>The form does not ask for your date of birth, student ID, home address, placement history, care records, social worker information or an explanation of your care or estrangement circumstances.</p><p>We process Community Check-In submissions on the basis of your consent under Article 6(1)(a) UK GDPR.</p><p>Where consent is relied upon, you can withdraw it at any time. Withdrawal does not affect processing that was lawful before you withdrew your consent.</p></LegalSection>
+
+      <LegalSection title="Special-category information"><p>BrightFutures HQ does not need you to provide health information, disability information or other special-category personal information through the Community Check-In.</p><p>Please avoid including this information where it is not necessary.</p><p>Because the Check-In contains optional free-text fields, you may nevertheless choose to include information falling within a special category under Article 9 UK GDPR.</p><p>Where we process special-category information on the basis of explicit consent, we will obtain an express indication of that consent in accordance with Article 9(2)(a) UK GDPR.</p><p>You may withdraw that consent at any time.</p><p>Special-category information contained in a private Check-In will not be published merely because it was submitted.</p></LegalSection>
+
+      <LegalSection title="Why we collect Community Check-Ins"><p>Community Check-Ins help BrightFutures HQ understand what people value, what the community could do next and what shared themes may need attention.</p><p>Access to raw private Check-Ins is restricted to specifically authorised members of the BrightFutures HQ team who need access for this purpose.</p><p>Other authorised editors may manage separate public content, including member highlights and community actions, without receiving access to the underlying private Check-In.</p><p>Private responses are not displayed publicly.</p></LegalSection>
+
+      <LegalSection title="Choosing to share something publicly"><p>You can keep your entire Community Check-In private.</p><p>Where public sharing is offered, you choose the exact excerpt that BrightFutures HQ may consider for publication. You can also choose whether an approved excerpt may appear anonymously, under your first name or under your full name.</p><p>Consent for publication on the BrightFutures HQ website and consent for publication through social media are separate choices.</p><p>Where publication relies on consent, we rely on Article 6(1)(a) UK GDPR and, where an approved excerpt contains special-category information, Article 9(2)(a).</p><p>Giving consent does not guarantee publication.</p><p>An authorised editor must review the proposed excerpt and create a separate draft member highlight before publication. Private answers are not automatically converted into public content.</p></LegalSection>
+
+      <LegalSection title="Access, correction, deletion and withdrawal"><p>You can contact BrightFutures HQ to:</p><ul className={list}><li>ask for access to personal information held about you;</li><li>ask us to correct inaccurate information;</li><li>ask us to delete information where applicable;</li><li>ask us to restrict certain processing;</li><li>object to processing based on legitimate interests;</li><li>withdraw consent; or</li><li>ask for a published member highlight to be removed.</li></ul><p>Please provide enough information for the authorised team to identify the relevant record, but do not send unnecessary sensitive information.</p><p>Where processing depends on consent, withdrawing consent will normally result in the relevant private record being deleted or the relevant public highlight being unpublished, unless another lawful basis requires or permits us to retain particular information.</p><p>Requests require review and action by an authorised member of the team. We do not promise instantaneous removal, but requests will be handled in accordance with applicable data protection law.</p></LegalSection>
+
+      <LegalSection title="How forms are processed"><p>Form submissions pass through the BrightFutures HQ website infrastructure and are stored in access-controlled collections within Directus, the content-management system used to administer the service.</p><p>Contact submissions may include a one-way hash derived from the requesting IP address and limited browser information for spam and abuse prevention. We process this on the basis of legitimate interests under Article 6(1)(f) UK GDPR.</p><p>Community Check-Ins use a temporary one-way IP hash for rate limiting on the same basis. This hash and associated browser information are not stored as part of the Check-In record.</p><p>The submission system is designed so that form contents are not deliberately written to application logs.</p></LegalSection>
+
+      <LegalSection title="Service providers"><p>We use infrastructure and technology providers where necessary to operate, secure and maintain BrightFutures HQ.</p><p>These may include our website hosting infrastructure, Cloudflare and the software and infrastructure used to operate Directus.</p><p>Where another organisation processes personal information on behalf of Vibes in Care CIC, appropriate data-processing arrangements are used where required by law.</p><p>Technical infrastructure may independently generate security or operational logs containing information such as IP addresses, browser information and request details.</p><p>Where personal information is transferred outside the United Kingdom, Vibes in Care CIC will ensure that an appropriate mechanism or safeguard required by UK data protection law applies.</p></LegalSection>
+
+      <LegalSection title="Cookies and tracking"><p>BrightFutures HQ does not currently use advertising pixels, behavioural advertising, social-media tracking embeds or analytics tracking.</p><p>The website may use browser or session storage for essential functionality such as restoring your position as you navigate.</p><p>Links to external services such as Instagram are ordinary links. Visiting an external website means that provider&apos;s own privacy practices apply.</p></LegalSection>
+
+      <LegalSection title="How long information is kept"><p>Private Community Check-Ins are normally retained for <strong>12 months from submission</strong> and are then deleted.</p><p>Published member highlights are reviewed at least annually and may be removed earlier where consent is withdrawn.</p><p>Other records are retained only for as long as reasonably necessary for the purpose for which they were collected, taking account of legal, security and operational requirements.</p><Subheading>Safeguarding or legal exception</Subheading><p>In exceptional circumstances, information may need to be retained beyond its normal retention period.</p><p>This may include where:</p><ul className={list}><li>Vibes in Care CIC has a legal obligation to retain information, relying where applicable on Article 6(1)(c) UK GDPR; or</li><li>processing is necessary to protect someone&apos;s vital interests under Article 6(1)(d) UK GDPR, such as in circumstances involving an immediate and serious risk to someone&apos;s life or safety.</li></ul><p>Where an exception applies, access will be restricted, the reason for continued retention will be documented, and the information will be deleted when the reason for retaining it no longer applies, subject to applicable legal requirements.</p><p>Different legal requirements may apply where special-category information is involved, and an appropriate Article 9 condition will be identified where required.</p></LegalSection>
+
+      <LegalSection title="Your data protection rights"><p>Depending on the circumstances, UK data protection law may give you rights including access, rectification, erasure, restriction, objection and withdrawal of consent.</p><p>Not every right applies in every situation.</p><p>You also have the right to complain to the <strong>Information Commissioner&apos;s Office (ICO)</strong> if you are concerned about the way your personal information has been handled.</p><p>You do not have to contact us before making a complaint, although we welcome the opportunity to resolve concerns directly.</p></LegalSection>
+
+      <LegalSection title="Contacting us about your information"><p>Questions, requests or concerns relating to personal information processed through BrightFutures HQ can be submitted through the BrightFutures HQ <Link to="/contact" className="font-semibold text-forest underline">contact page</Link>.</p><p>BrightFutures HQ will handle these requests on behalf of the data controller:</p><p><strong>Vibes in Care CIC</strong></p><p>BrightFutures HQ is a project of Vibes in Care CIC and an independent platform supporting BrightFutures Society and its community.</p></LegalSection>
+
+      <LegalSection title="Relationship with BrightFutures Society"><p><strong>Vibes in Care CIC → operates BrightFutures HQ → BrightFutures HQ independently supports BrightFutures Society and its community.</strong></p><p>This does not make BrightFutures Society a project, service or subsidiary of Vibes in Care CIC.</p><p>The Society&apos;s official status, membership and Students&apos; Union activities remain separate from the operation of BrightFutures HQ.</p></LegalSection>
+    </div></article>
+  </div>
+}
+
+function LegalSection({ title, children }: { title: string; children: React.ReactNode }) {
+  return <section className={section}><h2 className="font-display text-2xl text-forest">{title}</h2>{children}</section>
+}
+function Subheading({ children }: { children: React.ReactNode }) {
+  return <h3 className="pt-3 font-display text-xl text-forest">{children}</h3>
 }

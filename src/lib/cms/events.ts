@@ -1,16 +1,67 @@
-import { readItems } from "@directus/sdk"
-import { cmsClient } from "./client"
-import type { CmsEvent } from "./types"
+import { readItems } from "@directus/sdk";
+import { cmsClient, safeCmsRequest } from "./client";
+import type { CmsEvent } from "./types";
 
-export async function readPublicEvents() {
-  return cmsClient().request(readItems("events", {
-    filter: { status: { _in: ["confirmed", "completed", "cancelled"] } },
-    sort: ["start_date", "sort"],
-    limit: 200,
-  })) as Promise<CmsEvent[]>
+// Directus uses the event lifecycle itself as the publication control. Keep the
+// same rule for listings and detail pages so an editor cannot accidentally make
+// a provisional event reachable by its slug.
+export const PUBLIC_EVENT_STATUSES = ["confirmed", "completed"] as const;
+
+export async function readPublicEvents(): Promise<CmsEvent[]> {
+  return safeCmsRequest<CmsEvent[]>(
+    "Events",
+    () =>
+      cmsClient().request(
+        readItems("events", {
+          filter: { status: { _in: [...PUBLIC_EVENT_STATUSES] } },
+          sort: ["start_date", "sort"],
+          limit: 200,
+        }),
+      ),
+    [],
+    validEvents,
+  );
 }
 
-export async function readPublicEvent(slug: string) {
-  const rows = await cmsClient().request(readItems("events", { filter: { slug: { _eq: slug }, status: { _in: ["confirmed", "completed", "cancelled"] } }, limit: 1 })) as CmsEvent[]
-  return rows[0] ?? null
+export async function readPublicEvent(slug: string): Promise<CmsEvent | null> {
+  const rows = await safeCmsRequest<CmsEvent[]>(
+    "Event detail",
+    () =>
+      cmsClient().request(
+        readItems("events", {
+          filter: {
+            slug: { _eq: slug },
+            status: { _in: [...PUBLIC_EVENT_STATUSES] },
+          },
+          limit: 1,
+        }),
+      ),
+    [],
+    validEvents,
+  );
+  return rows[0] ?? null;
 }
+const validEvents = (value: unknown): value is CmsEvent[] =>
+  Array.isArray(value) &&
+  value.every(
+    (item) =>
+      !!item &&
+      typeof item === "object" &&
+      typeof (item as CmsEvent).title === "string" &&
+      typeof (item as CmsEvent).slug === "string" &&
+      typeof (item as CmsEvent).start_date === "string" &&
+      Number.isFinite(Date.parse((item as CmsEvent).start_date)) &&
+      PUBLIC_EVENT_STATUSES.includes(
+        (item as CmsEvent).status as (typeof PUBLIC_EVENT_STATUSES)[number],
+      ) &&
+      [
+        "social",
+        "coffee-connect",
+        "community",
+        "opportunity",
+        "voice-advocacy",
+        "wellbeing",
+        "trips",
+        "seasonal",
+      ].includes((item as CmsEvent).category),
+  );

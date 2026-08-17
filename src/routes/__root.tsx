@@ -2,13 +2,15 @@ import { HeadContent, Scripts, createRootRoute } from "@tanstack/react-router"
 import type { ReactNode } from "react"
 import { Header } from "@/components/Header"
 import { Footer } from "@/components/Footer"
+import { PageContentsBar } from "@/components/PageContentsBar"
 import { site } from "@/data/site"
 import { getSettings } from "@/lib/cms/server"
+import { fallbackSettings } from "@/lib/cms/settings"
 
 import "../styles.css"
 
 export const Route = createRootRoute({
-  loader: () => getSettings(),
+  loader: async () => { try { const settings = await getSettings(); return settings && typeof settings === "object" ? settings : fallbackSettings } catch (error) { console.error("Site settings could not be loaded.", error instanceof Error ? error.message : "Unknown error"); return fallbackSettings } },
   head: ({ loaderData }) => ({
     meta: [
       { charSet: "utf-8" },
@@ -28,7 +30,9 @@ export const Route = createRootRoute({
       { name: "theme-color", content: "#16332c" },
     ],
     links: [
-      { rel: "icon", href: "/favicon.ico" },
+      { rel: "icon", href: "/favicon.ico", sizes: "any" },
+      { rel: "icon", type: "image/png", sizes: "32x32", href: "/favicon-32x32.png" },
+      { rel: "apple-touch-icon", sizes: "180x180", href: "/apple-touch-icon.png" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       {
         rel: "preconnect",
@@ -61,6 +65,7 @@ function RootDocument({ children }: { children: ReactNode }) {
         <Header />
         <main id="main-content">{children}</main>
         <Footer />
+        <PageContentsBar />
         <Scripts />
       </body>
     </html>

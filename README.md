@@ -21,7 +21,7 @@ DIRECTUS_URL=https://cms.brightfutures.social DIRECTUS_ADMIN_TOKEN='...' npm run
 DIRECTUS_URL=https://cms.brightfutures.social DIRECTUS_ADMIN_TOKEN='...' npm run cms:seed
 ```
 
-The setup script creates or updates the collections and anonymous filtered read permissions. It explicitly removes anonymous permissions from contact messages and ideas. It does not create environment-specific users. Configure a dedicated runtime policy with create-only access to `contact_messages` and `ideas`, issue its static token as `DIRECTUS_SERVER_TOKEN`, and follow [scripts/directus/README.md](scripts/directus/README.md) for editor policies.
+The setup script creates or updates the collections and anonymous filtered read permissions. It explicitly removes anonymous permissions from contact messages, ideas, and community check-ins. It does not create environment-specific users. Configure a dedicated runtime policy with create-only access to the required submission collections, issue its static token as `DIRECTUS_SERVER_TOKEN`, and follow [scripts/directus/README.md](scripts/directus/README.md) for community and editor policies.
 
 The seed is idempotent. It imports the two confirmed dated events, the three real committee members and confirmed site settings. It does not create posts, resources, biographies, photos or provisional placeholder events.
 
@@ -30,6 +30,7 @@ The seed is idempotent. It imports the two confirmed dated events, the three rea
 - Add an event in **Events**, give it a unique slug and date, then set status to `confirmed`. Draft and provisional records are not public. Cancelled records remain available at their detail URL with a clear notice.
 - Add an article in **Posts**, provide a unique slug and publication date, then set status to `published`. Future-dated and non-published posts are excluded.
 - Update current members in **Committee**. Inactive members are excluded. Photos and biographies are optional.
+- Add up to three approved images in **Homepage Social Cards**. Keep a card in draft until public promotional consent is recorded; image alt text is required, while captions and Instagram post links are optional. With no published cards, no image grid is shown.
 - Update membership, announcement, contact and social links in the **Site Settings** singleton.
 - Publish only verified resources. Empty resources and stories sections show a quiet empty state.
 

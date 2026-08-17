@@ -9,51 +9,28 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as StoriesRouteImport } from './routes/stories'
-import { Route as ResourcesRouteImport } from './routes/resources'
-import { Route as PrivacyRouteImport } from './routes/privacy'
-import { Route as GetInvolvedRouteImport } from './routes/get-involved'
-import { Route as EventsRouteImport } from './routes/events'
-import { Route as ContactRouteImport } from './routes/contact'
-import { Route as AccessibilityRouteImport } from './routes/accessibility'
-import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as StoriesSlugRouteImport } from './routes/stories.$slug'
+import { Route as AboutRouteImport } from './routes/about'
+import { Route as AccessibilityRouteImport } from './routes/accessibility'
+import { Route as CheckInRouteImport } from './routes/check-in'
+import { Route as CommunityGuidelinesRouteImport } from './routes/community-guidelines'
+import { Route as ContactRouteImport } from './routes/contact'
+import { Route as EventsRouteImport } from './routes/events'
+import { Route as GetInvolvedRouteImport } from './routes/get-involved'
+import { Route as HighlightsRouteImport } from './routes/highlights'
+import { Route as PartnershipsRouteImport } from './routes/partnerships'
+import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as ResourcesRouteImport } from './routes/resources'
+import { Route as StoriesRouteImport } from './routes/stories'
+import { Route as TermsRouteImport } from './routes/terms'
+import { Route as VoiceRouteImport } from './routes/voice'
 import { Route as EventsSlugRouteImport } from './routes/events.$slug'
+import { Route as PartnershipsPerksRouteImport } from './routes/partnerships_.perks'
+import { Route as StoriesSlugRouteImport } from './routes/stories.$slug'
 
-const StoriesRoute = StoriesRouteImport.update({
-  id: '/stories',
-  path: '/stories',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ResourcesRoute = ResourcesRouteImport.update({
-  id: '/resources',
-  path: '/resources',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PrivacyRoute = PrivacyRouteImport.update({
-  id: '/privacy',
-  path: '/privacy',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const GetInvolvedRoute = GetInvolvedRouteImport.update({
-  id: '/get-involved',
-  path: '/get-involved',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const EventsRoute = EventsRouteImport.update({
-  id: '/events',
-  path: '/events',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ContactRoute = ContactRouteImport.update({
-  id: '/contact',
-  path: '/contact',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AccessibilityRoute = AccessibilityRouteImport.update({
-  id: '/accessibility',
-  path: '/accessibility',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AboutRoute = AboutRouteImport.update({
@@ -61,9 +38,79 @@ const AboutRoute = AboutRouteImport.update({
   path: '/about',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const AccessibilityRoute = AccessibilityRouteImport.update({
+  id: '/accessibility',
+  path: '/accessibility',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CheckInRoute = CheckInRouteImport.update({
+  id: '/check-in',
+  path: '/check-in',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CommunityGuidelinesRoute = CommunityGuidelinesRouteImport.update({
+  id: '/community-guidelines',
+  path: '/community-guidelines',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ContactRoute = ContactRouteImport.update({
+  id: '/contact',
+  path: '/contact',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EventsRoute = EventsRouteImport.update({
+  id: '/events',
+  path: '/events',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GetInvolvedRoute = GetInvolvedRouteImport.update({
+  id: '/get-involved',
+  path: '/get-involved',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HighlightsRoute = HighlightsRouteImport.update({
+  id: '/highlights',
+  path: '/highlights',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PartnershipsRoute = PartnershipsRouteImport.update({
+  id: '/partnerships',
+  path: '/partnerships',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResourcesRoute = ResourcesRouteImport.update({
+  id: '/resources',
+  path: '/resources',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StoriesRoute = StoriesRouteImport.update({
+  id: '/stories',
+  path: '/stories',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const VoiceRoute = VoiceRouteImport.update({
+  id: '/voice',
+  path: '/voice',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EventsSlugRoute = EventsSlugRouteImport.update({
+  id: '/$slug',
+  path: '/$slug',
+  getParentRoute: () => EventsRoute,
+} as any)
+const PartnershipsPerksRoute = PartnershipsPerksRouteImport.update({
+  id: '/partnerships_/perks',
+  path: '/partnerships/perks',
   getParentRoute: () => rootRouteImport,
 } as any)
 const StoriesSlugRoute = StoriesSlugRouteImport.update({
@@ -71,36 +118,45 @@ const StoriesSlugRoute = StoriesSlugRouteImport.update({
   path: '/$slug',
   getParentRoute: () => StoriesRoute,
 } as any)
-const EventsSlugRoute = EventsSlugRouteImport.update({
-  id: '/$slug',
-  path: '/$slug',
-  getParentRoute: () => EventsRoute,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/accessibility': typeof AccessibilityRoute
+  '/check-in': typeof CheckInRoute
+  '/community-guidelines': typeof CommunityGuidelinesRoute
   '/contact': typeof ContactRoute
   '/events': typeof EventsRouteWithChildren
   '/get-involved': typeof GetInvolvedRoute
+  '/highlights': typeof HighlightsRoute
+  '/partnerships': typeof PartnershipsRoute
   '/privacy': typeof PrivacyRoute
   '/resources': typeof ResourcesRoute
   '/stories': typeof StoriesRouteWithChildren
+  '/terms': typeof TermsRoute
+  '/voice': typeof VoiceRoute
   '/events/$slug': typeof EventsSlugRoute
+  '/partnerships/perks': typeof PartnershipsPerksRoute
   '/stories/$slug': typeof StoriesSlugRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/accessibility': typeof AccessibilityRoute
+  '/check-in': typeof CheckInRoute
+  '/community-guidelines': typeof CommunityGuidelinesRoute
   '/contact': typeof ContactRoute
   '/events': typeof EventsRouteWithChildren
   '/get-involved': typeof GetInvolvedRoute
+  '/highlights': typeof HighlightsRoute
+  '/partnerships': typeof PartnershipsRoute
   '/privacy': typeof PrivacyRoute
   '/resources': typeof ResourcesRoute
   '/stories': typeof StoriesRouteWithChildren
+  '/terms': typeof TermsRoute
+  '/voice': typeof VoiceRoute
   '/events/$slug': typeof EventsSlugRoute
+  '/partnerships/perks': typeof PartnershipsPerksRoute
   '/stories/$slug': typeof StoriesSlugRoute
 }
 export interface FileRoutesById {
@@ -108,13 +164,20 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/accessibility': typeof AccessibilityRoute
+  '/check-in': typeof CheckInRoute
+  '/community-guidelines': typeof CommunityGuidelinesRoute
   '/contact': typeof ContactRoute
   '/events': typeof EventsRouteWithChildren
   '/get-involved': typeof GetInvolvedRoute
+  '/highlights': typeof HighlightsRoute
+  '/partnerships': typeof PartnershipsRoute
   '/privacy': typeof PrivacyRoute
   '/resources': typeof ResourcesRoute
   '/stories': typeof StoriesRouteWithChildren
+  '/terms': typeof TermsRoute
+  '/voice': typeof VoiceRoute
   '/events/$slug': typeof EventsSlugRoute
+  '/partnerships_/perks': typeof PartnershipsPerksRoute
   '/stories/$slug': typeof StoriesSlugRoute
 }
 export interface FileRouteTypes {
@@ -123,39 +186,60 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/accessibility'
+    | '/check-in'
+    | '/community-guidelines'
     | '/contact'
     | '/events'
     | '/get-involved'
+    | '/highlights'
+    | '/partnerships'
     | '/privacy'
     | '/resources'
     | '/stories'
+    | '/terms'
+    | '/voice'
     | '/events/$slug'
+    | '/partnerships/perks'
     | '/stories/$slug'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/about'
     | '/accessibility'
+    | '/check-in'
+    | '/community-guidelines'
     | '/contact'
     | '/events'
     | '/get-involved'
+    | '/highlights'
+    | '/partnerships'
     | '/privacy'
     | '/resources'
     | '/stories'
+    | '/terms'
+    | '/voice'
     | '/events/$slug'
+    | '/partnerships/perks'
     | '/stories/$slug'
   id:
     | '__root__'
     | '/'
     | '/about'
     | '/accessibility'
+    | '/check-in'
+    | '/community-guidelines'
     | '/contact'
     | '/events'
     | '/get-involved'
+    | '/highlights'
+    | '/partnerships'
     | '/privacy'
     | '/resources'
     | '/stories'
+    | '/terms'
+    | '/voice'
     | '/events/$slug'
+    | '/partnerships_/perks'
     | '/stories/$slug'
   fileRoutesById: FileRoutesById
 }
@@ -163,63 +247,28 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
   AccessibilityRoute: typeof AccessibilityRoute
+  CheckInRoute: typeof CheckInRoute
+  CommunityGuidelinesRoute: typeof CommunityGuidelinesRoute
   ContactRoute: typeof ContactRoute
   EventsRoute: typeof EventsRouteWithChildren
   GetInvolvedRoute: typeof GetInvolvedRoute
+  HighlightsRoute: typeof HighlightsRoute
+  PartnershipsRoute: typeof PartnershipsRoute
   PrivacyRoute: typeof PrivacyRoute
   ResourcesRoute: typeof ResourcesRoute
   StoriesRoute: typeof StoriesRouteWithChildren
+  TermsRoute: typeof TermsRoute
+  VoiceRoute: typeof VoiceRoute
+  PartnershipsPerksRoute: typeof PartnershipsPerksRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/stories': {
-      id: '/stories'
-      path: '/stories'
-      fullPath: '/stories'
-      preLoaderRoute: typeof StoriesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/resources': {
-      id: '/resources'
-      path: '/resources'
-      fullPath: '/resources'
-      preLoaderRoute: typeof ResourcesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/privacy': {
-      id: '/privacy'
-      path: '/privacy'
-      fullPath: '/privacy'
-      preLoaderRoute: typeof PrivacyRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/get-involved': {
-      id: '/get-involved'
-      path: '/get-involved'
-      fullPath: '/get-involved'
-      preLoaderRoute: typeof GetInvolvedRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/events': {
-      id: '/events'
-      path: '/events'
-      fullPath: '/events'
-      preLoaderRoute: typeof EventsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/contact': {
-      id: '/contact'
-      path: '/contact'
-      fullPath: '/contact'
-      preLoaderRoute: typeof ContactRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/accessibility': {
-      id: '/accessibility'
-      path: '/accessibility'
-      fullPath: '/accessibility'
-      preLoaderRoute: typeof AccessibilityRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/about': {
@@ -229,11 +278,109 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AboutRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/accessibility': {
+      id: '/accessibility'
+      path: '/accessibility'
+      fullPath: '/accessibility'
+      preLoaderRoute: typeof AccessibilityRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/check-in': {
+      id: '/check-in'
+      path: '/check-in'
+      fullPath: '/check-in'
+      preLoaderRoute: typeof CheckInRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/community-guidelines': {
+      id: '/community-guidelines'
+      path: '/community-guidelines'
+      fullPath: '/community-guidelines'
+      preLoaderRoute: typeof CommunityGuidelinesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/contact': {
+      id: '/contact'
+      path: '/contact'
+      fullPath: '/contact'
+      preLoaderRoute: typeof ContactRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/events': {
+      id: '/events'
+      path: '/events'
+      fullPath: '/events'
+      preLoaderRoute: typeof EventsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/get-involved': {
+      id: '/get-involved'
+      path: '/get-involved'
+      fullPath: '/get-involved'
+      preLoaderRoute: typeof GetInvolvedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/highlights': {
+      id: '/highlights'
+      path: '/highlights'
+      fullPath: '/highlights'
+      preLoaderRoute: typeof HighlightsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/partnerships': {
+      id: '/partnerships'
+      path: '/partnerships'
+      fullPath: '/partnerships'
+      preLoaderRoute: typeof PartnershipsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/resources': {
+      id: '/resources'
+      path: '/resources'
+      fullPath: '/resources'
+      preLoaderRoute: typeof ResourcesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/stories': {
+      id: '/stories'
+      path: '/stories'
+      fullPath: '/stories'
+      preLoaderRoute: typeof StoriesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/voice': {
+      id: '/voice'
+      path: '/voice'
+      fullPath: '/voice'
+      preLoaderRoute: typeof VoiceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/events/$slug': {
+      id: '/events/$slug'
+      path: '/$slug'
+      fullPath: '/events/$slug'
+      preLoaderRoute: typeof EventsSlugRouteImport
+      parentRoute: typeof EventsRoute
+    }
+    '/partnerships_/perks': {
+      id: '/partnerships_/perks'
+      path: '/partnerships/perks'
+      fullPath: '/partnerships/perks'
+      preLoaderRoute: typeof PartnershipsPerksRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/stories/$slug': {
@@ -242,13 +389,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/stories/$slug'
       preLoaderRoute: typeof StoriesSlugRouteImport
       parentRoute: typeof StoriesRoute
-    }
-    '/events/$slug': {
-      id: '/events/$slug'
-      path: '/$slug'
-      fullPath: '/events/$slug'
-      preLoaderRoute: typeof EventsSlugRouteImport
-      parentRoute: typeof EventsRoute
     }
   }
 }
@@ -279,12 +419,19 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
   AccessibilityRoute: AccessibilityRoute,
+  CheckInRoute: CheckInRoute,
+  CommunityGuidelinesRoute: CommunityGuidelinesRoute,
   ContactRoute: ContactRoute,
   EventsRoute: EventsRouteWithChildren,
   GetInvolvedRoute: GetInvolvedRoute,
+  HighlightsRoute: HighlightsRoute,
+  PartnershipsRoute: PartnershipsRoute,
   PrivacyRoute: PrivacyRoute,
   ResourcesRoute: ResourcesRoute,
   StoriesRoute: StoriesRouteWithChildren,
+  TermsRoute: TermsRoute,
+  VoiceRoute: VoiceRoute,
+  PartnershipsPerksRoute: PartnershipsPerksRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
