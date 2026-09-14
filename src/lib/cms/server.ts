@@ -464,7 +464,7 @@ const checkinInput = z
     name: cleanText(120),
     email: z.union([z.literal(""), z.string().trim().email().max(254)]),
     share_publicly: z.boolean(),
-    public_name_preference: z.enum(["full_name", "first_name", "anonymous"]),
+    public_name_preference: z.union([z.enum(["full_name", "first_name", "anonymous"]), z.literal("")]),
     public_excerpt: cleanText(1500),
     website_consent: z.boolean(),
     social_media_consent: z.boolean(),
@@ -482,7 +482,7 @@ const checkinInput = z
       context.addIssue({
         code: "custom",
         path: ["highlight"],
-        message: "Add at least one response before sending your check-in.",
+        message: "Add something to at least one box before sending your check-in.",
       });
     if (data.share_publicly && !data.public_excerpt)
       context.addIssue({
@@ -490,6 +490,10 @@ const checkinInput = z
         path: ["public_excerpt"],
         message: "Choose the exact excerpt that may be considered for sharing.",
       });
+    if (data.share_publicly && !data.public_name_preference)
+      context.addIssue({ code: "custom", path: ["public_name_preference"], message: "Choose how you would like to be credited." });
+    if (data.share_publicly && !data.website_consent && !data.social_media_consent)
+      context.addIssue({ code: "custom", path: ["website_consent"], message: "Choose at least one place where the excerpt may be shared." });
     if (!data.share_publicly && (data.website_consent || data.social_media_consent))
       context.addIssue({
         code: "custom",

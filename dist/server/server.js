@@ -76,7 +76,7 @@ function getResponse() {
 }
 var HEADERS = { TSS_SHELL: "X-TSS_SHELL" };
 async function getStartManifest(matchedRoutes) {
-  const { tsrStartManifest } = await import("./assets/_tanstack-start-manifest_v-hXVY1ARO.js");
+  const { tsrStartManifest } = await import("./assets/_tanstack-start-manifest_v-aySxZQUh.js");
   const startManifest = tsrStartManifest();
   let routes = startManifest.routes;
   routes[rootRouteId];
@@ -98,59 +98,59 @@ async function getStartManifest(matchedRoutes) {
 const manifest = {
   "01179dcb172c360d8e7fb04e5b2124ff7acb0f36caba4694f36c35a37e7715c8": {
     functionName: "getSocialCardsServer_createServerFn_handler",
-    importer: () => import("./assets/server-DdBWnxgO.js")
+    importer: () => import("./assets/server-B8X7jzYx.js")
   },
   "167ba15ae4b55098241e92911773c71357230c664dc9ee89cdb333f13968f6a2": {
     functionName: "getEventsServer_createServerFn_handler",
-    importer: () => import("./assets/server-DdBWnxgO.js")
+    importer: () => import("./assets/server-B8X7jzYx.js")
   },
   "16e14e768e3171f904fc62d3dbb8dc36725cb4721585d80f8a3376cd273b2af5": {
     functionName: "getSiteSettingsServer_createServerFn_handler",
-    importer: () => import("./assets/server-DdBWnxgO.js")
+    importer: () => import("./assets/server-B8X7jzYx.js")
   },
   "25f68e7f8034139322a52ff40c945b50570f0049e8ff782d6efb590f9a9f472b": {
     functionName: "getCommunityActionsServer_createServerFn_handler",
-    importer: () => import("./assets/server-DdBWnxgO.js")
+    importer: () => import("./assets/server-B8X7jzYx.js")
   },
   "4aa391040c420b87535c6025a32bce7c0a6d1c213d55d23200e47cfbf94b15c8": {
     functionName: "submitContact_createServerFn_handler",
-    importer: () => import("./assets/server-DdBWnxgO.js")
+    importer: () => import("./assets/server-B8X7jzYx.js")
   },
   "a30e69df17a1a918144bf392c07f3fab99574c478668839d59e598b1c0642bd2": {
     functionName: "getEventServer_createServerFn_handler",
-    importer: () => import("./assets/server-DdBWnxgO.js")
+    importer: () => import("./assets/server-B8X7jzYx.js")
   },
   "afb8f434e238e65bf496fdd6da6ebd8237b98ccaf92ab71d253f313560605a90": {
     functionName: "submitCommunityCheckin_createServerFn_handler",
-    importer: () => import("./assets/server-DdBWnxgO.js")
+    importer: () => import("./assets/server-B8X7jzYx.js")
   },
   "b3e4b99703b24021917134ff1c670baad0d008cb52d022fb9ca1bf998430f57a": {
     functionName: "getCommitteeServer_createServerFn_handler",
-    importer: () => import("./assets/server-DdBWnxgO.js")
+    importer: () => import("./assets/server-B8X7jzYx.js")
   },
   "c3e2c9fa7efaa05d66fa8d6dd66845d4a95e73ba84399382ced6dde0531d8667": {
     functionName: "getHighlightsServer_createServerFn_handler",
-    importer: () => import("./assets/server-DdBWnxgO.js")
+    importer: () => import("./assets/server-B8X7jzYx.js")
   },
   "c45ff4ca2ad39500b15a2d254a9d296b9127c74f01b3f11bf8947feab407ffae": {
     functionName: "getPostsServer_createServerFn_handler",
-    importer: () => import("./assets/server-DdBWnxgO.js")
+    importer: () => import("./assets/server-B8X7jzYx.js")
   },
   "db88b5907e38d3c14d850e46b5ce7f7f08fdb0c79cb8eac32e983360a3a50531": {
     functionName: "submitIdea_createServerFn_handler",
-    importer: () => import("./assets/server-DdBWnxgO.js")
+    importer: () => import("./assets/server-B8X7jzYx.js")
   },
   "dbf6c5ea319bc9c376955563f80f383f29da4244784cc0e323652989763a041a": {
     functionName: "submitPerksEnquiry_createServerFn_handler",
-    importer: () => import("./assets/server-DdBWnxgO.js")
+    importer: () => import("./assets/server-B8X7jzYx.js")
   },
   "eaae13ebb87b84f971ba35b626367e8223d33586d24bdddd6aba26fa9380e657": {
     functionName: "getResourcesServer_createServerFn_handler",
-    importer: () => import("./assets/server-DdBWnxgO.js")
+    importer: () => import("./assets/server-B8X7jzYx.js")
   },
   "fa34e5b0534a94c006a3e171388e1107cb7c112967d1e42778325fe11244b5e0": {
     functionName: "getPostServer_createServerFn_handler",
-    importer: () => import("./assets/server-DdBWnxgO.js")
+    importer: () => import("./assets/server-B8X7jzYx.js")
   }
 };
 async function getServerFnById(id, access) {
@@ -1391,8 +1391,8 @@ var getBaseManifest = getProdBaseManifest;
 var createEarlyHintsForRequest = createEarlyHintsCollector;
 async function loadEntries() {
   const [routerEntry, startEntry, pluginAdapters] = await Promise.all([
-    import("./assets/router-zUj7zh-c.js").then((n) => n.r),
-    import("./assets/start-HYkvq4Ni.js"),
+    import("./assets/router-tuXOV3p3.js").then((n) => n.r),
+    import("./assets/start-D-BZCxv9.js"),
     import("./assets/empty-plugin-adapters-BFgPZ6_d.js")
   ]);
   return {
@@ -1822,7 +1822,8 @@ function createServerEntry(entry) {
 const server = createServerEntry({ fetch });
 export {
   TSS_SERVER_FUNCTION as T,
-  getRequestHeaders as a,
+  createMiddleware as a,
+  getRequestHeaders as b,
   createServerFn as c,
   createServerEntry,
   server as default,

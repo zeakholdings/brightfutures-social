@@ -190,7 +190,6 @@ function Home() {
               <p className="font-display text-4xl italic leading-tight">There’s power in saying it together.</p>
               <svg viewBox="0 0 220 60" className="mt-8 w-full"><path d="M5 35c42-29 69 15 111-7 27-14 53-13 98 8" fill="none" stroke="#e8734a" strokeWidth="6" strokeLinecap="round" /></svg>
             </div>
-            <div className="absolute bottom-5 right-3 rotate-6 rounded-full border-2 border-forest bg-cream px-5 py-3 text-sm font-extrabold uppercase tracking-wider">student voice</div>
           </div>
           <div>
             <h2 className="font-display text-5xl leading-[1.02] sm:text-7xl">A stronger collective voice at Greenwich.</h2>

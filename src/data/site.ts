@@ -21,19 +21,18 @@ export const nav = [
   { label: "News & Stories", to: "/stories" },
 ] as const
 
-export const footerLinks = [
-  { label: "About", to: "/about" },
-  { label: "What’s On", to: "/events" },
-  { label: "Get Involved", to: "/get-involved" },
-  { label: "Partnerships", to: "/partnerships" },
-  { label: "Resources", to: "/resources" },
-  { label: "News & Stories", to: "/stories" },
-  { label: "Member Highlights", to: "/highlights" },
-  { label: "You Said / We’re Doing", to: "/voice" },
-  { label: "Community Check-In", to: "/check-in" },
-  { label: "Contact", to: "/contact" },
-  { label: "Privacy", to: "/privacy" },
-  { label: "Terms", to: "/terms" },
-  { label: "Community Guidelines", to: "/community-guidelines" },
-  { label: "Accessibility", to: "/accessibility" },
+export const footerGroups = [
+  { label: "Explore", links: [
+    { label: "What’s On", to: "/events" }, { label: "About", to: "/about" },
+    { label: "News & Stories", to: "/stories" }, { label: "Member Highlights", to: "/highlights" },
+  ] },
+  { label: "Get involved", links: [
+    { label: "Join us", to: "/get-involved" }, { label: "Community Check-In", to: "/check-in" },
+    { label: "Partnerships", to: "/partnerships" }, { label: "You Said / We’re Doing", to: "/voice" },
+  ] },
+  { label: "Information", links: [
+    { label: "Resources", to: "/resources" }, { label: "Contact", to: "/contact" },
+    { label: "Accessibility", to: "/accessibility" }, { label: "Privacy", to: "/privacy" },
+    { label: "Terms", to: "/terms" },
+  ] },
 ] as const

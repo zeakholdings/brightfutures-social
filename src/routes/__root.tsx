@@ -3,6 +3,7 @@ import type { ReactNode } from "react"
 import { Header } from "@/components/Header"
 import { Footer } from "@/components/Footer"
 import { PageContentsBar } from "@/components/PageContentsBar"
+import { AnalyticsConsent } from "@/components/AnalyticsConsent"
 import { site } from "@/data/site"
 import { getSettings } from "@/lib/cms/server"
 import { fallbackSettings } from "@/lib/cms/settings"
@@ -66,6 +67,7 @@ function RootDocument({ children }: { children: ReactNode }) {
         <main id="main-content">{children}</main>
         <Footer />
         <PageContentsBar />
+        <AnalyticsConsent />
         <Scripts />
       </body>
     </html>

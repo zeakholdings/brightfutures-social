@@ -25,7 +25,7 @@ export const Route = createFileRoute("/about")({
 });
 
 const promises = [
-  ["Find each other", "A place for care-experienced and estranged students to meet, make friends and support one another—without having to explain everything first."],
+  ["Find each other", "A place for care-experienced and estranged students to meet, make friends and support one another, without having to explain everything first."],
   ["Make things happen", "Socials, activities, workshops and opportunities shaped around what students actually want from their time at Greenwich."],
   ["Say it together", "Space to raise issues, share what is and isn’t working and push for practical changes that help current and future students."],
 ] as const;
@@ -52,7 +52,9 @@ function CommitteePortrait({ person, index }: { person: CommitteeMember; index: 
 
 function AboutPage() {
   const loaded = Route.useLoaderData();
-  const committee = Array.isArray(loaded) && loaded.length ? loaded : fallbackCommittee;
+  const people = Array.isArray(loaded) && loaded.length ? loaded : fallbackCommittee;
+  const honoraryPresidents = people.filter((person) => person.role.toLowerCase() === "honorary president");
+  const committee = people.filter((person) => person.role.toLowerCase() !== "honorary president");
   return (
     <div className="overflow-hidden">
       <section className="relative bg-forest px-6 py-16 text-cream sm:px-8 sm:py-24 lg:py-32">
@@ -106,12 +108,22 @@ function AboutPage() {
           </div>
           <ul className="mt-14 grid gap-x-8 gap-y-14 md:grid-cols-2 lg:grid-cols-3">
             {committee.map((person, index) => (
-              <li key={person.id || person.name} className={`group ${index % 3 === 1 ? "lg:translate-y-12" : index % 3 === 2 ? "lg:translate-y-4" : ""}`}>
-                <div className="relative aspect-[4/5] overflow-hidden border-2 border-forest bg-cream shadow-[8px_8px_0_#16332c]"><CommitteePortrait person={person} index={index} /><span className="absolute right-4 top-4 rounded-full bg-cream px-3 py-1.5 text-xs font-extrabold uppercase tracking-wider text-forest">{person.role_short || person.role}</span></div>
+              <li key={person.id || person.name} className="group">
+                <div className="relative aspect-[4/5] w-full max-w-64 overflow-hidden border-2 border-forest bg-cream shadow-[8px_8px_0_#16332c]"><CommitteePortrait person={person} index={index} /></div>
                 <div className="mt-7 border-t border-forest/30 pt-5"><h3 className="font-display text-4xl text-forest">{person.name}</h3><p className="mt-2 font-bold text-coral">{person.role}</p>{person.bio ? <p className="mt-4 max-w-sm leading-relaxed text-forest/70">{person.bio}</p> : <p className="mt-4 max-w-sm leading-relaxed text-forest/60">Part of the student team shaping BrightFutures this year.</p>}</div>
               </li>
             ))}
           </ul>
+          {honoraryPresidents.map((person, index) => (
+            <article key={person.id || person.name} className="mt-20 grid gap-8 border-t-2 border-forest pt-10 sm:grid-cols-[12rem_1fr] sm:items-start lg:mt-24 lg:gap-12">
+              <div className="relative aspect-[4/5] w-48 overflow-hidden border-2 border-forest bg-cream shadow-[6px_6px_0_#16332c] sm:w-full"><CommitteePortrait person={person} index={committee.length + index} /></div>
+              <div className="max-w-3xl">
+                <p className="font-display text-2xl font-semibold text-coral">Honorary President</p>
+                <h3 className="mt-3 font-display text-4xl text-forest sm:text-5xl">{person.name}</h3>
+                {person.bio ? <p className="mt-5 whitespace-pre-line leading-relaxed text-forest/70">{person.bio}</p> : null}
+              </div>
+            </article>
+          ))}
         </div>
       </section>
 

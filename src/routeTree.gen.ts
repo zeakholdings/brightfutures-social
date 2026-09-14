@@ -15,6 +15,7 @@ import { Route as AccessibilityRouteImport } from './routes/accessibility'
 import { Route as CheckInRouteImport } from './routes/check-in'
 import { Route as CommunityGuidelinesRouteImport } from './routes/community-guidelines'
 import { Route as ContactRouteImport } from './routes/contact'
+import { Route as CookiesRouteImport } from './routes/cookies'
 import { Route as EventsRouteImport } from './routes/events'
 import { Route as GetInvolvedRouteImport } from './routes/get-involved'
 import { Route as HighlightsRouteImport } from './routes/highlights'
@@ -56,6 +57,11 @@ const CommunityGuidelinesRoute = CommunityGuidelinesRouteImport.update({
 const ContactRoute = ContactRouteImport.update({
   id: '/contact',
   path: '/contact',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CookiesRoute = CookiesRouteImport.update({
+  id: '/cookies',
+  path: '/cookies',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EventsRoute = EventsRouteImport.update({
@@ -126,6 +132,7 @@ export interface FileRoutesByFullPath {
   '/check-in': typeof CheckInRoute
   '/community-guidelines': typeof CommunityGuidelinesRoute
   '/contact': typeof ContactRoute
+  '/cookies': typeof CookiesRoute
   '/events': typeof EventsRouteWithChildren
   '/get-involved': typeof GetInvolvedRoute
   '/highlights': typeof HighlightsRoute
@@ -146,6 +153,7 @@ export interface FileRoutesByTo {
   '/check-in': typeof CheckInRoute
   '/community-guidelines': typeof CommunityGuidelinesRoute
   '/contact': typeof ContactRoute
+  '/cookies': typeof CookiesRoute
   '/events': typeof EventsRouteWithChildren
   '/get-involved': typeof GetInvolvedRoute
   '/highlights': typeof HighlightsRoute
@@ -167,6 +175,7 @@ export interface FileRoutesById {
   '/check-in': typeof CheckInRoute
   '/community-guidelines': typeof CommunityGuidelinesRoute
   '/contact': typeof ContactRoute
+  '/cookies': typeof CookiesRoute
   '/events': typeof EventsRouteWithChildren
   '/get-involved': typeof GetInvolvedRoute
   '/highlights': typeof HighlightsRoute
@@ -189,6 +198,7 @@ export interface FileRouteTypes {
     | '/check-in'
     | '/community-guidelines'
     | '/contact'
+    | '/cookies'
     | '/events'
     | '/get-involved'
     | '/highlights'
@@ -209,6 +219,7 @@ export interface FileRouteTypes {
     | '/check-in'
     | '/community-guidelines'
     | '/contact'
+    | '/cookies'
     | '/events'
     | '/get-involved'
     | '/highlights'
@@ -229,6 +240,7 @@ export interface FileRouteTypes {
     | '/check-in'
     | '/community-guidelines'
     | '/contact'
+    | '/cookies'
     | '/events'
     | '/get-involved'
     | '/highlights'
@@ -250,6 +262,7 @@ export interface RootRouteChildren {
   CheckInRoute: typeof CheckInRoute
   CommunityGuidelinesRoute: typeof CommunityGuidelinesRoute
   ContactRoute: typeof ContactRoute
+  CookiesRoute: typeof CookiesRoute
   EventsRoute: typeof EventsRouteWithChildren
   GetInvolvedRoute: typeof GetInvolvedRoute
   HighlightsRoute: typeof HighlightsRoute
@@ -304,6 +317,13 @@ declare module '@tanstack/react-router' {
       path: '/contact'
       fullPath: '/contact'
       preLoaderRoute: typeof ContactRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/cookies': {
+      id: '/cookies'
+      path: '/cookies'
+      fullPath: '/cookies'
+      preLoaderRoute: typeof CookiesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/events': {
@@ -422,6 +442,7 @@ const rootRouteChildren: RootRouteChildren = {
   CheckInRoute: CheckInRoute,
   CommunityGuidelinesRoute: CommunityGuidelinesRoute,
   ContactRoute: ContactRoute,
+  CookiesRoute: CookiesRoute,
   EventsRoute: EventsRouteWithChildren,
   GetInvolvedRoute: GetInvolvedRoute,
   HighlightsRoute: HighlightsRoute,
@@ -438,10 +459,11 @@ export const routeTree = rootRouteImport
   ._addFileTypes<FileRouteTypes>()
 
 import type { getRouter } from './router.tsx'
-import type { createStart } from '@tanstack/react-start'
+import type { startInstance } from './start.ts'
 declare module '@tanstack/react-start' {
   interface Register {
     ssr: true
     router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
   }
 }

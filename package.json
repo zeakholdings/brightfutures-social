@@ -14,7 +14,10 @@
     "cms:seed": "node scripts/directus/seed.mjs",
     "cms:migrate:resources": "node scripts/directus/migrate-resource-metadata.mjs",
     "cms:migrate:resource-audiences": "node scripts/directus/migrate-resource-audiences.mjs",
-    "cms:migrate:resource-guidance": "node scripts/directus/migrate-resource-first-stop-guidance.mjs"
+    "cms:migrate:resource-guidance": "node scripts/directus/migrate-resource-first-stop-guidance.mjs",
+    "cms:curate:money-housing": "node scripts/directus/curate-money-housing-resources.mjs",
+    "cms:curate:wellbeing": "node scripts/directus/curate-wellbeing-resources.mjs",
+    "cms:curate:life-after-university": "node scripts/directus/curate-life-after-university-resources.mjs"
   },
   "dependencies": {
     "@directus/sdk": "^24.0.0",

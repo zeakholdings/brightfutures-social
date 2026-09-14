@@ -3,7 +3,7 @@ import { useRouterState } from "@tanstack/react-router"
 import { ChevronUp, List, X } from "lucide-react"
 
 type SectionLink = { id: string; label: string }
-const legalPages = new Set(["/privacy", "/terms", "/community-guidelines"])
+const legalPages = new Set(["/privacy", "/cookies", "/terms", "/community-guidelines"])
 
 function headingId(label: string, index: number) {
   const slug = label

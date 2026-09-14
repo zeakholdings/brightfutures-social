@@ -48,6 +48,50 @@ current resource URL into `source_url`. It deliberately does not infer an
 audience from titles, categories or context labels. Audience values must be
 checked against the official source; leave the field blank when that is unclear.
 
+After reviewing the official University of Greenwich, Greenwich Students' Union,
+GOV.UK and provider pages, apply the deliberately curated Money and Housing set:
+
+```bash
+npm run cms:curate:money-housing
+```
+
+This idempotent migration updates the four core money routes, adds one Greenwich
+funding gateway and maintains four distinct housing routes: University
+accommodation, care-experienced/estranged and vacation arrangements, independent
+GSU private-renting advice, and urgent council homelessness help. It archives the
+Unite Foundation listing because Greenwich is not currently a partner university.
+Override `RESOURCE_REVIEWED_ON`, `RESOURCE_REVIEW_DUE` or `FUNDING_REVIEW_DUE`
+when a later source review is completed.
+
+After reviewing the official University of Greenwich and Report + Support pages,
+apply the curated wellbeing hierarchy:
+
+```bash
+npm run cms:curate:wellbeing
+```
+
+This idempotent migration updates the four existing wellbeing records. It orders
+and labels Spectrum Life for 24/7 in-the-moment support, the Student Wellbeing
+Hub for ongoing University support, the counselling and mental-health
+self-referral pathway, and Report + Support for reportable incidents. It does not
+add services. Override `RESOURCE_REVIEWED_ON` or `RESOURCE_REVIEW_DUE` after a
+later source review.
+
+After reviewing the official University of Greenwich and GOV.UK guidance, apply
+the curated transition set:
+
+```bash
+npm run cms:curate:life-after-university
+```
+
+This idempotent migration maintains five distinct routes for finalists and recent
+graduates: the Greenwich leaving-university checklist, graduate careers access,
+postgraduate study and funding, award ceremonies, and statutory care-leaver
+transition support. It avoids duplicating the broader careers and housing entries.
+The older job-application record is archived because the graduate careers route
+uses the same official page and covers that purpose more clearly.
+Override `RESOURCE_REVIEWED_ON` or `RESOURCE_REVIEW_DUE` after a later review.
+
 ## Event publication and freshness
 
 Event publication is controlled by `status`: **Confirmed** events are public and

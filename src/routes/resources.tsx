@@ -61,6 +61,21 @@ function isGreenwichCares(resource: Resource) {
     .includes("greenwich cares");
 }
 
+function isUrgentHousingHelp(resource: Resource) {
+  return resource.category === "accommodation" &&
+    `${resource.title} ${resource.context_label || ""}`.toLowerCase().includes("urgent");
+}
+
+function wellbeingAction(resource: Resource) {
+  if (resource.category !== "wellbeing") return null;
+  const title = resource.title.toLowerCase();
+  if (title.includes("spectrum life")) return "Talk to someone now";
+  if (title.includes("student wellbeing hub")) return "Explore wellbeing support";
+  if (title.includes("counselling") || title.includes("mental health")) return "Find out how to self-refer";
+  if (title.includes("report + support")) return "Open Report + Support";
+  return null;
+}
+
 function reviewedDate(value: string, dateStyle: "long" | "monthYear" = "monthYear") {
   return new Intl.DateTimeFormat("en-GB", dateStyle === "long"
     ? { day: "numeric", month: "long", year: "numeric" }
@@ -71,15 +86,20 @@ function reviewedDate(value: string, dateStyle: "long" | "monthYear" = "monthYea
 
 function ResourceDetails({ resource, featured = false }: { resource: Resource; featured?: boolean }) {
   const audience = resource.audience?.map((value) => audienceLabels[value]).filter(Boolean) || [];
+  const urgentHousingHelp = isUrgentHousingHelp(resource);
+  const actionLabel = wellbeingAction(resource);
 
   return (
     <article
-      className={featured
+      className={urgentHousingHelp
+        ? "relative border-2 border-coral bg-paper px-5 py-7 shadow-[6px_6px_0_#e8734a] sm:px-7 sm:py-8"
+        : featured
         ? "relative border-t-2 border-forest bg-paper px-5 py-7 shadow-[6px_6px_0_#e8734a] sm:px-7 sm:py-8"
         : "border-t border-forest/20 py-7 first:border-t-0 sm:py-8"}
     >
       <div className="grid gap-5 sm:grid-cols-[minmax(0,1fr)_10.5rem] sm:items-center sm:gap-8">
         <div className="min-w-0">
+          {resource.context_label ? <p className={`mb-2 text-xs font-extrabold uppercase tracking-[0.12em] ${urgentHousingHelp ? "text-coral" : "text-forest/55"}`}>{resource.context_label}</p> : null}
           <h3 className={`break-words font-display font-semibold leading-[1.08] text-forest ${featured ? "text-3xl sm:text-4xl" : "text-2xl sm:text-3xl"}`}>{resource.title}</h3>
           {resource.organisation ? <p className="mt-1.5 text-sm font-semibold text-coral">{resource.organisation}</p> : null}
           {resource.description ? <p className="mt-3 max-w-3xl leading-relaxed text-forest/70">{resource.description}</p> : null}
@@ -108,7 +128,7 @@ function ResourceDetails({ resource, featured = false }: { resource: Resource; f
         </div>
         {resource.url ? (
           <a href={resource.url} target="_blank" rel="noreferrer" className="inline-flex w-fit items-center gap-2 bg-forest px-5 py-3.5 text-sm font-bold text-cream transition-transform hover:-translate-y-1 sm:w-full sm:justify-center">
-            Visit resource <ExternalLink size={16} aria-hidden="true" />
+            {urgentHousingHelp ? "Get urgent housing help" : actionLabel || "Visit resource"} <ExternalLink size={16} aria-hidden="true" />
             <span className="sr-only"> (opens in a new tab)</span>
           </a>
         ) : null}
@@ -122,7 +142,8 @@ function ResourcesPage() {
   const [selectedCategory, setSelectedCategory] = useState<DirectoryCategory | null>(null);
   const [selectedAudience, setSelectedAudience] = useState<ResourceAudience | "">("");
   const audienceFilteredResources = selectedAudience
-    ? resources.filter((resource) => resource.audience?.includes(selectedAudience))
+    ? resources.filter((resource) => resource.audience?.includes(selectedAudience) ||
+        (selectedAudience !== "all-greenwich-students" && resource.audience?.includes("all-greenwich-students")))
     : resources;
   // Only make an overall claim when every displayed resource has been checked.
   // The oldest date is conservative when records were reviewed on different days.
@@ -133,24 +154,27 @@ function ResourcesPage() {
     : null;
   const featured = audienceFilteredResources.find(isGreenwichCares);
   const startHerePriorities = [
+    "urgent housing help",
+    "accommodation for care-experienced",
     "greenwich cares",
     "gsu advice",
     "money advice",
+    "spectrum life",
     "student wellbeing hub",
-    "accommodation for care-experienced",
+    "counselling and mental health",
+    "report + support",
   ];
-  const startHere = [
-    ...audienceFilteredResources.filter((resource) => resource.featured),
+  const startHereCandidates = [
     ...startHerePriorities.map((term) => audienceFilteredResources.find((resource) =>
       `${resource.title} ${resource.organisation || ""}`.toLowerCase().includes(term),
     )),
+    ...audienceFilteredResources.filter((resource) => resource.featured),
   ]
     .filter((resource): resource is Resource => !!resource)
-    .filter((resource, index, list) => list.findIndex((item) => item.id === resource.id) === index)
-    .slice(0, 5);
-  const recommended = selectedCategory
-    ? startHere.filter((resource) => directoryCategory(resource) === selectedCategory)
-    : startHere;
+    .filter((resource, index, list) => list.findIndex((item) => item.id === resource.id) === index);
+  const recommended = (selectedCategory
+    ? startHereCandidates.filter((resource) => directoryCategory(resource) === selectedCategory)
+    : startHereCandidates).slice(0, 5);
   const visibleCategories = selectedCategory
     ? categoryDetails.filter(([slug]) => slug === selectedCategory)
     : categoryDetails;
@@ -174,7 +198,7 @@ function ResourcesPage() {
         <div className="relative mx-auto max-w-7xl">
           <div className="max-w-4xl lg:w-[68%]">
             <h1 className="font-display text-[clamp(3.8rem,8vw,7.8rem)] font-medium leading-[0.88] tracking-[-0.05em]">Need a hand with <em className="font-normal text-coral-light">something?</em></h1>
-            <p className="mt-8 max-w-2xl text-lg leading-relaxed text-cream/78 sm:text-xl">Money, housing, uni support, wellbeing, careers — we’ve pulled together the places that are actually worth knowing about.</p>
+            <p className="mt-8 max-w-2xl text-lg leading-relaxed text-cream/78 sm:text-xl">Money, housing, uni support, wellbeing and careers. We’ve pulled together the places that are actually worth knowing about.</p>
             {overallReview ? <p className="mt-4 text-sm text-cream/60">Information last reviewed: {reviewedDate(overallReview, "long")}</p> : null}
           </div>
           <div className="relative mt-12 h-32 lg:hidden" aria-hidden="true"><div className="absolute left-1 top-1 h-24 w-24 rounded-full bg-green" /><div className="absolute left-14 top-5 rotate-2 border-2 border-forest bg-cream px-5 py-4 font-display text-xl italic text-forest shadow-[7px_7px_0_#e8734a]">Keep this handy.</div></div>
@@ -222,7 +246,7 @@ function ResourcesPage() {
                 </select>
                 <p className="mt-2 text-xs leading-relaxed text-forest/55">Tags are a guide only. Check the provider’s criteria before applying.</p>
               </div>
-              {startHere.length ? (
+              {startHereCandidates.length ? (
                 <section aria-labelledby="start-here-heading">
                   <div className="border-b-2 border-forest pb-6">
                     <h2 id="start-here-heading" className="font-display text-5xl leading-none text-forest sm:text-6xl">Recommended starting points</h2>
@@ -236,10 +260,10 @@ function ResourcesPage() {
                 </section>
               ) : null}
 
-              <section className={startHere.length ? "mt-20 lg:mt-28" : ""} aria-labelledby="browse-heading">
+              <section className={startHereCandidates.length ? "mt-20 lg:mt-28" : ""} aria-labelledby="browse-heading">
                 <div className="border-b-2 border-forest pb-6">
-                  <h2 id="browse-heading" className="font-display text-5xl leading-none text-forest sm:text-6xl">Relevant resources</h2>
-                  <p className="mt-3 text-sm text-forest/62" aria-live="polite">{selectedAudienceLabel ? `${resultCount} resource${resultCount === 1 ? "" : "s"} tagged for ${selectedAudienceLabel.toLowerCase()}${selectedLabel ? ` in ${selectedLabel.toLowerCase()}` : ""}.` : selectedLabel ? `Showing ${selectedLabel.toLowerCase()} resources.` : `All ${resources.length} checked places, grouped by what you need.`}</p>
+                  <h2 id="browse-heading" className="font-display text-5xl leading-none text-forest sm:text-6xl">Browse all resources</h2>
+                  <p className="mt-3 text-sm text-forest/62" aria-live="polite">{selectedAudienceLabel ? `${resultCount} resource${resultCount === 1 ? "" : "s"} available to ${selectedAudienceLabel.toLowerCase()}${selectedLabel ? ` in ${selectedLabel.toLowerCase()}` : ""}.` : selectedLabel ? `Showing ${selectedLabel.toLowerCase()} resources.` : "Grouped by what you need."}</p>
                 </div>
                 <div>
                   {visibleCategories.map(([slug, label, , description]) => {
@@ -262,7 +286,7 @@ function ResourcesPage() {
               </section>
               <aside className="mt-12 border-t border-forest/20 pt-7 text-forest/70" aria-labelledby="not-sure-heading">
                 <h2 id="not-sure-heading" className="font-display text-2xl font-semibold text-forest">Not sure where to start?</h2>
-                <p className="mt-2 max-w-3xl leading-relaxed">BrightFutures can help you find the right service. We’re a student community, though, rather than an advice, counselling or emergency service.</p>
+                <p className="mt-2 max-w-3xl leading-relaxed">BrightFutures can point you towards an appropriate service. We’re a student community and cannot provide emergency, counselling, housing, legal or financial advice.</p>
                 <p className="mt-4 text-sm">Something missing? <Link to="/contact" className="font-bold text-forest underline decoration-coral decoration-2 underline-offset-4">Tell us about a resource</Link>.</p>
               </aside>
             </>

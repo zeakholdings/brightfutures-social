@@ -50,4 +50,4 @@ npm run build
 npm run start
 ```
 
-The production server listens on port 6090. No analytics or trackers are included.
+The production server listens on port 6090. ZEAK Insights aggregate analytics loads only after the visitor consents. Session recording additionally requires separate consent and is disabled unless the production build sets `VITE_ZEAK_SESSION_RECORDING_ENABLED=true`; enable that only after applying the replay privacy settings described in the Cookie Policy.

@@ -28,7 +28,7 @@ const faqs = [
   ["How much discount do we need to offer?", "There is no minimum. You choose an offer that works for your business."],
   ["Can the offer have restrictions?", "Yes. You can set reasonable terms such as specific days, times, products or minimum spend."],
   ["Can we change or withdraw an offer?", "Yes. Just let BrightFutures know so we can keep the listing accurate."],
-  ["Who can use BrightFutures Perks?", "BrightFutures Perks is intended for eligible BrightFutures members. We are developing the member experience separately."],
+  ["Who can use BrightFutures Perks?", "BrightFutures Perks is being developed for care-experienced and estranged University of Greenwich students who participate in BrightFutures. We’ll publish the access process before offers go live."],
   ["How will our business be promoted?", "Partners can be listed on BrightFutures.social and may also be featured through BrightFutures social media, communications and activities where appropriate."],
 ]
 

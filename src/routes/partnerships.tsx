@@ -23,6 +23,7 @@ function PartnershipsPage() {
     <PageHero title="Partnerships rooted in Greenwich." body="We work with local organisations that want to help students feel connected, supported and at home in their community." />
     <section className="bg-cream px-6 py-20 sm:px-8 lg:py-28">
       <div className="mx-auto max-w-7xl">
+        <p className="mb-10 max-w-3xl text-lg leading-relaxed text-forest/70 sm:mb-12">We work with local businesses, charities, community organisations, University teams and others who can create useful opportunities for students.</p>
         <div className="grid gap-8 lg:grid-cols-2">
           {routes.map(({ title, body, icon: Icon, live }) => <article key={title} className={`flex min-h-72 flex-col border p-7 sm:p-9 ${live ? "border-coral bg-paper shadow-[8px_8px_0_#e8734a]" : "border-forest/15 bg-cream-dim"}`}>
             <Icon className={live ? "text-coral" : "text-green"} size={30} aria-hidden="true" />
