@@ -3,6 +3,7 @@ import type { ReactNode } from "react"
 export function PageHero({
   title,
   body,
+  eyebrow,
   visual,
   quiet = false,
 }: {
@@ -17,6 +18,7 @@ export function PageHero({
       {!quiet ? <><div className="pointer-events-none absolute -right-20 -top-28 h-96 w-96 rounded-full border-[3rem] border-green/25" aria-hidden="true" /><div className="pointer-events-none absolute bottom-8 right-[12%] hidden h-20 w-20 rotate-12 border-2 border-coral/70 lg:block" aria-hidden="true" /></> : null}
       <div className={`relative mx-auto max-w-7xl ${visual ? "grid items-center gap-12 lg:grid-cols-[minmax(0,1.15fr)_minmax(18rem,.85fr)] lg:gap-20" : ""}`}>
         <div className={visual ? "" : "max-w-5xl"}>
+          {eyebrow ? <p className="mb-4 text-xs font-extrabold uppercase tracking-[.18em] text-coral-light">{eyebrow}</p> : null}
           <h1 className={`max-w-4xl font-display font-medium tracking-[-.045em] ${quiet ? "text-4xl leading-tight sm:text-5xl" : "text-[clamp(3.4rem,7vw,7rem)] leading-[.92]"}`}>
             {title}
           </h1>
