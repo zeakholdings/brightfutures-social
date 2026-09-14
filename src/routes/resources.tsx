@@ -1,6 +1,19 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, ExternalLink } from "lucide-react";
-import { useState } from "react";
+import {
+  ArrowRight,
+  Banknote,
+  BriefcaseBusiness,
+  Check,
+  ChevronDown,
+  ExternalLink,
+  GraduationCap,
+  HeartHandshake,
+  Home,
+  Search,
+  Sparkles,
+  X,
+} from "lucide-react";
+import { useMemo, useRef, useState } from "react";
 import { getResources } from "@/lib/cms/server";
 import type { Resource, ResourceAudience } from "@/lib/cms/types";
 
@@ -9,38 +22,31 @@ export const Route = createFileRoute("/resources")({
   head: () => ({
     meta: [
       { title: "Resources | BrightFutures Greenwich" },
-      {
-        name: "description",
-        content:
-          "Money, housing, wellbeing, university support and careers resources for Greenwich students.",
-      },
+      { name: "description", content: "Find checked money, housing, university, wellbeing and careers support for Greenwich students." },
       { property: "og:title", content: "Resources | BrightFutures Greenwich" },
     ],
   }),
   component: ResourcesPage,
 });
 
-const categoryDetails = [
-  ["money-funding", "Money & funding", "I need help with money", "Bursaries, hardship support and Student Finance."],
-  ["accommodation", "Housing", "I need somewhere to live or housing help", "Halls, holidays and housing help."],
-  ["university-support", "University support", "I need help with university", "People and services at Greenwich."],
-  ["wellbeing", "Wellbeing", "I’m struggling or need wellbeing support", "When things aren’t feeling manageable."],
-  ["careers", "Careers & opportunities", "I want careers or opportunities", "Jobs, applications, placements and experience."],
-  ["life-after-university", "Life after university", "I’m graduating or thinking about life after uni", "Graduating, moving on and figuring out the next bit."],
+const categories = [
+  { id: "money-funding", label: "Money", prompt: "Money is tight", description: "Funding, bursaries and practical money help.", Icon: Banknote },
+  { id: "accommodation", label: "Housing", prompt: "I need housing help", description: "Halls, renting and somewhere safe to stay.", Icon: Home },
+  { id: "university-support", label: "University", prompt: "I need help at uni", description: "Independent advice and support at Greenwich.", Icon: GraduationCap },
+  { id: "wellbeing", label: "Wellbeing", prompt: "I’m not doing okay", description: "Someone to talk to and ongoing support.", Icon: HeartHandshake },
+  { id: "careers", label: "Careers", prompt: "I want work or opportunities", description: "Jobs, experience, mentoring and applications.", Icon: BriefcaseBusiness },
+  { id: "life-after-university", label: "After university", prompt: "I’m graduating / thinking ahead", description: "Next steps, graduation and what comes after.", Icon: Sparkles },
 ] as const;
 
-type DirectoryCategory = (typeof categoryDetails)[number][0];
-
-const categoryLabels = Object.fromEntries(
-  categoryDetails.map(([slug, label]) => [slug, label]),
-) as Record<DirectoryCategory, string>;
+type DirectoryCategory = (typeof categories)[number]["id"];
+type AudienceFilter = "" | ResourceAudience;
 
 const audienceLabels: Record<ResourceAudience, string> = {
-  "all-greenwich-students": "All Greenwich students",
-  "care-experienced-students": "Care-experienced students",
+  "all-greenwich-students": "Everyone",
+  "care-experienced-students": "Care-experienced",
   "care-leavers": "Care leavers",
   "estranged-students": "Estranged students",
-  "care-experienced-and-estranged-students": "Care-experienced & estranged students",
+  "care-experienced-and-estranged-students": "Care-experienced & estranged",
 };
 
 const categoryAliases: Partial<Record<Resource["category"], DirectoryCategory>> = {
@@ -50,249 +56,138 @@ const categoryAliases: Partial<Record<Resource["category"], DirectoryCategory>> 
   community: "university-support",
 };
 
-function directoryCategory(resource: Resource): DirectoryCategory | null {
+function categoryOf(resource: Resource): DirectoryCategory | null {
   const category = categoryAliases[resource.category] || resource.category;
-  return category in categoryLabels ? (category as DirectoryCategory) : null;
+  return categories.some(({ id }) => id === category) ? category as DirectoryCategory : null;
 }
 
-function isGreenwichCares(resource: Resource) {
-  return `${resource.title} ${resource.organisation || ""}`
-    .toLowerCase()
-    .includes("greenwich cares");
+function formatReviewed(value?: string | null) {
+  if (!value) return null;
+  return new Intl.DateTimeFormat("en-GB", { month: "short", year: "numeric" }).format(new Date(`${value}T12:00:00`));
 }
 
-function isUrgentHousingHelp(resource: Resource) {
-  return resource.category === "accommodation" &&
-    `${resource.title} ${resource.context_label || ""}`.toLowerCase().includes("urgent");
+function audienceFor(resource: Resource) {
+  return resource.audience?.map((item) => audienceLabels[item]).filter(Boolean) || [];
 }
 
-function wellbeingAction(resource: Resource) {
-  if (resource.category !== "wellbeing") return null;
-  const title = resource.title.toLowerCase();
-  if (title.includes("spectrum life")) return "Talk to someone now";
-  if (title.includes("student wellbeing hub")) return "Explore wellbeing support";
-  if (title.includes("counselling") || title.includes("mental health")) return "Find out how to self-refer";
-  if (title.includes("report + support")) return "Open Report + Support";
-  return null;
-}
-
-function reviewedDate(value: string, dateStyle: "long" | "monthYear" = "monthYear") {
-  return new Intl.DateTimeFormat("en-GB", dateStyle === "long"
-    ? { day: "numeric", month: "long", year: "numeric" }
-    : { month: "long", year: "numeric" }).format(
-    new Date(value.includes("T") ? value : `${value}T12:00:00`),
-  );
-}
-
-function ResourceDetails({ resource, featured = false }: { resource: Resource; featured?: boolean }) {
-  const audience = resource.audience?.map((value) => audienceLabels[value]).filter(Boolean) || [];
-  const urgentHousingHelp = isUrgentHousingHelp(resource);
-  const actionLabel = wellbeingAction(resource);
+function ResourceCard({ resource }: { resource: Resource }) {
+  const category = categories.find(({ id }) => id === categoryOf(resource));
+  const Icon = category?.Icon || Sparkles;
+  const audiences = audienceFor(resource);
+  const status = resource.context_label?.toLowerCase().includes("check") ? resource.context_label : null;
 
   return (
-    <article
-      className={urgentHousingHelp
-        ? "relative border-2 border-coral bg-paper px-5 py-7 shadow-[6px_6px_0_#e8734a] sm:px-7 sm:py-8"
-        : featured
-        ? "relative border-t-2 border-forest bg-paper px-5 py-7 shadow-[6px_6px_0_#e8734a] sm:px-7 sm:py-8"
-        : "border-t border-forest/20 py-7 first:border-t-0 sm:py-8"}
-    >
-      <div className="grid gap-5 sm:grid-cols-[minmax(0,1fr)_10.5rem] sm:items-center sm:gap-8">
-        <div className="min-w-0">
-          {resource.context_label ? <p className={`mb-2 text-xs font-extrabold uppercase tracking-[0.12em] ${urgentHousingHelp ? "text-coral" : "text-forest/55"}`}>{resource.context_label}</p> : null}
-          <h3 className={`break-words font-display font-semibold leading-[1.08] text-forest ${featured ? "text-3xl sm:text-4xl" : "text-2xl sm:text-3xl"}`}>{resource.title}</h3>
-          {resource.organisation ? <p className="mt-1.5 text-sm font-semibold text-coral">{resource.organisation}</p> : null}
-          {resource.description ? <p className="mt-3 max-w-3xl leading-relaxed text-forest/70">{resource.description}</p> : null}
-          {resource.first_stop_guidance ? (
-            <div className="mt-4 max-w-3xl border-l-2 border-green pl-4">
-              <p className="text-xs font-extrabold uppercase tracking-[0.12em] text-forest/55">Good first stop if…</p>
-              <p className="mt-1 text-sm leading-relaxed text-forest/80">{resource.first_stop_guidance}</p>
-            </div>
-          ) : null}
-          {audience.length ? (
-            <p className="mt-4 max-w-3xl text-sm leading-relaxed text-forest/60">
-              <span className="font-semibold text-forest/75">Who it’s for:</span>{" "}
-              {audience.join("; ")}
-            </p>
-          ) : null}
-          {resource.eligibility_note ? (
-            <p className="mt-1.5 max-w-3xl text-sm leading-relaxed text-forest/55">
-              {resource.eligibility_note}
-            </p>
-          ) : null}
-          {audience.length || resource.eligibility_note ? (
-            <p className="mt-1.5 text-xs text-forest/45">
-              {resource.last_reviewed ? `Checked ${reviewedDate(resource.last_reviewed)}. ` : ""}The official provider decides eligibility.
-            </p>
-          ) : resource.last_reviewed ? <p className="mt-1.5 text-xs text-forest/45">Checked {reviewedDate(resource.last_reviewed)}.</p> : null}
-        </div>
-        {resource.url ? (
-          <a href={resource.url} target="_blank" rel="noreferrer" className="inline-flex w-fit items-center gap-2 bg-forest px-5 py-3.5 text-sm font-bold text-cream transition-transform hover:-translate-y-1 sm:w-full sm:justify-center">
-            {urgentHousingHelp ? "Get urgent housing help" : actionLabel || "Visit resource"} <ExternalLink size={16} aria-hidden="true" />
-            <span className="sr-only"> (opens in a new tab)</span>
-          </a>
-        ) : null}
+    <article className="group flex h-full flex-col border border-forest/15 bg-paper p-5 transition duration-200 hover:-translate-y-1 hover:border-forest/35 hover:shadow-[5px_6px_0_#f1e9d8] focus-within:border-forest/45 sm:p-6">
+      <div className="flex items-start justify-between gap-3">
+        <span className="inline-flex items-center gap-2 text-xs font-extrabold uppercase tracking-[.11em] text-forest/60"><span className="grid size-8 place-items-center rounded-full bg-cream-dim text-forest"><Icon size={15} aria-hidden="true" /></span>{category?.label}</span>
+        {status ? <span className="max-w-40 border border-coral/35 bg-coral-light/25 px-2 py-1 text-right text-[10px] font-bold leading-tight text-forest">{status}</span> : null}
+      </div>
+      <h3 className="mt-5 font-display text-2xl font-semibold leading-[1.04] text-forest">{resource.title}</h3>
+      {resource.organisation ? <p className="mt-2 text-sm font-bold text-coral">{resource.organisation}</p> : null}
+      {resource.description ? <p className="mt-3 text-sm leading-relaxed text-forest/70">{resource.description}</p> : null}
+      {audiences.length ? <div className="mt-5 flex flex-wrap gap-2">{audiences.map((audience) => <span key={audience} className="border border-green/35 bg-green/10 px-2.5 py-1 text-xs font-semibold text-forest">{audience}</span>)}</div> : null}
+      <div className="mt-auto pt-6">
+        {resource.url ? <a href={resource.url} target="_blank" rel="noreferrer" className="inline-flex min-h-11 items-center gap-2 bg-forest px-4 py-2.5 text-sm font-bold text-cream transition-colors hover:bg-forest-light focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-coral">Visit resource <ExternalLink size={15} aria-hidden="true" /><span className="sr-only"> (opens in a new tab)</span></a> : null}
+        {(resource.first_stop_guidance || resource.eligibility_note || resource.last_reviewed) ? <details className="mt-4 border-t border-forest/15 pt-3">
+          <summary className="flex cursor-pointer list-none items-center justify-between gap-2 text-sm font-bold text-forest marker:content-none">More details <ChevronDown size={16} aria-hidden="true" /></summary>
+          <div className="space-y-3 pt-4 text-sm leading-relaxed text-forest/68">
+            {resource.first_stop_guidance ? <p><strong className="text-forest">Good first stop if…</strong><br />{resource.first_stop_guidance}</p> : null}
+            {resource.eligibility_note ? <p>{resource.eligibility_note}</p> : null}
+            {formatReviewed(resource.last_reviewed) ? <p className="flex items-center gap-1.5 text-xs text-forest/50"><Check size={13} aria-hidden="true" /> Checked {formatReviewed(resource.last_reviewed)}</p> : null}
+          </div>
+        </details> : null}
       </div>
     </article>
   );
 }
 
+function RecommendedCard({ resource }: { resource: Resource }) {
+  return <article className="flex flex-col border-2 border-forest bg-paper p-6 shadow-[7px_7px_0_#e8734a] sm:p-7">
+    <p className="text-xs font-extrabold uppercase tracking-[.12em] text-coral">{resource.organisation}</p>
+    <h3 className="mt-3 font-display text-3xl leading-none text-forest">{resource.title}</h3>
+    <p className="mt-4 leading-relaxed text-forest/72">{resource.description}</p>
+    {resource.first_stop_guidance ? <p className="mt-5 border-l-2 border-green pl-3 text-sm leading-relaxed text-forest/80"><strong>Good first stop if…</strong> {resource.first_stop_guidance}</p> : null}
+    <div className="mt-5 flex flex-wrap gap-2">{audienceFor(resource).map((audience) => <span key={audience} className="border border-forest/20 px-2.5 py-1 text-xs font-bold text-forest">{audience}</span>)}</div>
+    {resource.url ? <a href={resource.url} target="_blank" rel="noreferrer" className="mt-6 inline-flex min-h-11 w-fit items-center gap-2 font-bold text-forest underline decoration-coral decoration-2 underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-coral">Visit resource <ExternalLink size={15} aria-hidden="true" /><span className="sr-only"> (opens in a new tab)</span></a> : null}
+  </article>;
+}
+
 function ResourcesPage() {
   const resources = Route.useLoaderData();
-  const [selectedCategory, setSelectedCategory] = useState<DirectoryCategory | null>(null);
-  const [selectedAudience, setSelectedAudience] = useState<ResourceAudience | "">("");
-  const audienceFilteredResources = selectedAudience
-    ? resources.filter((resource) => resource.audience?.includes(selectedAudience) ||
-        (selectedAudience !== "all-greenwich-students" && resource.audience?.includes("all-greenwich-students")))
-    : resources;
-  // Only make an overall claim when every displayed resource has been checked.
-  // The oldest date is conservative when records were reviewed on different days.
+  const resultsRef = useRef<HTMLElement>(null);
+  const [query, setQuery] = useState("");
+  const [category, setCategory] = useState<DirectoryCategory | "">("");
+  const [audience, setAudience] = useState<AudienceFilter>("");
+  const hasFilters = Boolean(query || category || audience);
+
+  const filtered = useMemo(() => {
+    const needle = query.trim().toLowerCase();
+    return resources.filter((resource) => {
+      const matchesCategory = !category || categoryOf(resource) === category;
+      const matchesAudience = !audience || resource.audience?.includes(audience) || (audience !== "all-greenwich-students" && resource.audience?.includes("all-greenwich-students"));
+      const searchable = [resource.title, resource.organisation, resource.description, resource.context_label, categoryOf(resource), ...audienceFor(resource)].filter(Boolean).join(" ").toLowerCase();
+      return matchesCategory && matchesAudience && (!needle || searchable.includes(needle));
+    });
+  }, [resources, query, category, audience]);
+
+  const recommended = useMemo(() => {
+    const preferred = ["Greenwich Cares", "GSU Advice Service", "Greenwich Money Advice and Support", "Student Wellbeing Hub"];
+    return preferred.map((title) => resources.find((resource) => resource.title === title)).filter((resource): resource is Resource => Boolean(resource)).slice(0, 4);
+  }, [resources]);
+
+  const urgent = resources.filter((resource) => resource.title === "Urgent housing help: homeless or at risk" || resource.title.includes("Spectrum Life"));
   const overallReview = resources.length && resources.every((resource) => resource.last_reviewed)
-    ? resources.reduce<string>((oldest, resource) =>
-        resource.last_reviewed! < oldest ? resource.last_reviewed! : oldest,
-      resources[0].last_reviewed!)
+    ? resources.reduce((oldest, resource) => resource.last_reviewed! < oldest ? resource.last_reviewed! : oldest, resources[0].last_reviewed!)
     : null;
-  const featured = audienceFilteredResources.find(isGreenwichCares);
-  const startHerePriorities = [
-    "urgent housing help",
-    "accommodation for care-experienced",
-    "greenwich cares",
-    "gsu advice",
-    "money advice",
-    "spectrum life",
-    "student wellbeing hub",
-    "counselling and mental health",
-    "report + support",
-  ];
-  const startHereCandidates = [
-    ...startHerePriorities.map((term) => audienceFilteredResources.find((resource) =>
-      `${resource.title} ${resource.organisation || ""}`.toLowerCase().includes(term),
-    )),
-    ...audienceFilteredResources.filter((resource) => resource.featured),
-  ]
-    .filter((resource): resource is Resource => !!resource)
-    .filter((resource, index, list) => list.findIndex((item) => item.id === resource.id) === index);
-  const recommended = (selectedCategory
-    ? startHereCandidates.filter((resource) => directoryCategory(resource) === selectedCategory)
-    : startHereCandidates).slice(0, 5);
-  const visibleCategories = selectedCategory
-    ? categoryDetails.filter(([slug]) => slug === selectedCategory)
-    : categoryDetails;
-  const selectedLabel = selectedCategory ? categoryLabels[selectedCategory] : null;
-  const selectedAudienceLabel = selectedAudience ? audienceLabels[selectedAudience] : null;
-  const resultCount = selectedCategory
-    ? audienceFilteredResources.filter((resource) => directoryCategory(resource) === selectedCategory).length
-    : audienceFilteredResources.length;
 
-  return (
-    <div className="overflow-hidden bg-cream">
-      <section className="relative bg-forest px-6 py-16 text-cream sm:px-8 sm:py-24 lg:py-28">
-        <div className="pointer-events-none absolute inset-y-0 right-0 hidden w-[42%] lg:block" aria-hidden="true">
-          <div className="absolute right-[8%] top-[7%] h-72 w-72 rounded-full bg-green" />
-          <div className="absolute right-[15%] top-[24%] w-72 rotate-3 border-2 border-forest bg-cream p-7 text-forest shadow-[12px_12px_0_#e8734a]">
-            <p className="font-display text-4xl italic leading-tight">The links we’d send to a friend.</p>
-            <svg viewBox="0 0 220 55" className="mt-7 w-full" fill="none"><path d="M5 32c40-25 70 17 111-5 30-16 56-10 99 7" stroke="#5c9a5f" strokeWidth="6" strokeLinecap="round" /></svg>
+  const clear = () => { setQuery(""); setCategory(""); setAudience(""); };
+  const chooseCategory = (id: DirectoryCategory) => {
+    setCategory((current) => current === id ? "" : id);
+    window.setTimeout(() => resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 0);
+  };
+
+  return <div className="overflow-hidden bg-cream">
+    <section className="relative bg-forest px-5 py-14 text-cream sm:px-8 sm:py-20 lg:py-24">
+      <div className="pointer-events-none absolute right-[7%] top-12 hidden size-56 rounded-full border-[28px] border-green/70 lg:block" aria-hidden="true" />
+      <div className="relative mx-auto max-w-7xl">
+        <p className="text-xs font-extrabold tracking-[.18em] text-coral-light">RESOURCES &amp; SUPPORT</p>
+        <div className="mt-5 grid gap-10 lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-end">
+          <div>
+            <h1 className="max-w-4xl font-display text-[clamp(3.4rem,7vw,6.6rem)] leading-[.88] tracking-[-.045em]">What do you need <em className="font-normal text-coral-light">help</em> with?</h1>
+            <p className="mt-6 max-w-2xl text-lg leading-relaxed text-cream/78">Money, housing, uni, wellbeing, work or figuring out what comes next. Start with what’s happening right now.</p>
           </div>
-          <div className="absolute bottom-[9%] right-[7%] -rotate-6 bg-coral px-5 py-3 text-xs font-extrabold uppercase tracking-[0.15em]">Keep this handy</div>
+          <p className="hidden border-l border-cream/25 pl-5 text-sm leading-relaxed text-cream/70 lg:block">The links we’d send to a friend — checked, clear and ready when you need them.</p>
         </div>
-        <div className="relative mx-auto max-w-7xl">
-          <div className="max-w-4xl lg:w-[68%]">
-            <h1 className="font-display text-[clamp(3.8rem,8vw,7.8rem)] font-medium leading-[0.88] tracking-[-0.05em]">Need a hand with <em className="font-normal text-coral-light">something?</em></h1>
-            <p className="mt-8 max-w-2xl text-lg leading-relaxed text-cream/78 sm:text-xl">Money, housing, uni support, wellbeing and careers. We’ve pulled together the places that are actually worth knowing about.</p>
-            {overallReview ? <p className="mt-4 text-sm text-cream/60">Information last reviewed: {reviewedDate(overallReview, "long")}</p> : null}
+        <label className="relative mt-9 block max-w-3xl" htmlFor="hero-resource-search"><span className="sr-only">Search support resources</span><Search className="absolute left-5 top-1/2 -translate-y-1/2 text-forest" size={21} aria-hidden="true" /><input id="hero-resource-search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search support, bursaries, housing, careers…" className="min-h-15 w-full border-2 border-transparent bg-paper py-4 pl-14 pr-5 text-base text-forest placeholder:text-forest/48 focus:border-coral focus:outline-none" /></label>
+        <p className="mt-4 text-sm text-cream/70"><strong className="text-cream">{resources.length} checked resources</strong>{overallReview ? <> <span aria-hidden="true">·</span> last review {formatReviewed(overallReview)}</> : null}</p>
+      </div>
+    </section>
+
+    <section className="bg-cream-dim px-5 py-14 sm:px-8 sm:py-20" aria-labelledby="start-heading">
+      <div className="mx-auto max-w-7xl"><div className="flex flex-wrap items-end justify-between gap-3"><div><p className="text-xs font-extrabold tracking-[.15em] text-coral">START HERE</p><h2 id="start-heading" className="mt-2 font-display text-4xl leading-none text-forest sm:text-5xl">What’s happening?</h2></div><p className="max-w-md text-sm leading-relaxed text-forest/65">Choose what feels most useful. You can change it at any time.</p></div>
+        <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{categories.map(({ id, prompt, description, Icon }) => { const count = resources.filter((resource) => categoryOf(resource) === id).length; const selected = category === id; return <button key={id} type="button" aria-pressed={selected} onClick={() => chooseCategory(id)} className="group min-h-44 border border-forest/20 bg-paper p-5 text-left transition hover:-translate-y-1 hover:border-forest hover:shadow-[5px_6px_0_#85b978] focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-coral aria-pressed:border-forest aria-pressed:bg-forest aria-pressed:text-cream">
+          <span className="flex items-start justify-between"><span className="grid size-10 place-items-center rounded-full bg-green/20 text-forest group-aria-pressed:bg-coral group-aria-pressed:text-forest"><Icon size={20} aria-hidden="true" /></span><span className="text-xs font-bold opacity-65">{count} resources</span></span><span className="mt-5 block font-display text-2xl leading-none">{prompt}</span><span className="mt-2 block text-sm leading-relaxed opacity-70">{description}</span>
+        </button>; })}</div>
+      </div>
+    </section>
+
+    {urgent.length ? <section className="bg-forest-light px-5 py-8 text-cream sm:px-8" aria-labelledby="urgent-heading"><div className="mx-auto grid max-w-7xl gap-6 lg:grid-cols-[15rem_1fr]"><div><p className="text-xs font-extrabold tracking-[.16em] text-coral-light">SUPPORT THAT CAN’T WAIT</p><h2 id="urgent-heading" className="mt-2 font-display text-3xl leading-none">Need help right now?</h2></div><div className="grid gap-3 md:grid-cols-2">{urgent.map((resource) => <a key={resource.id} href={resource.url || undefined} target="_blank" rel="noreferrer" className="group border border-cream/25 bg-forest/25 p-4 transition hover:bg-forest focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-coral"><span className="flex items-center justify-between gap-4 font-bold">{resource.title}<ExternalLink size={16} aria-hidden="true" /></span><span className="mt-2 block text-sm leading-relaxed text-cream/75">{resource.description}</span><span className="mt-3 inline-block text-xs font-bold text-coral-light">Open support <span className="sr-only">(opens in a new tab)</span></span></a>)}</div></div></section> : null}
+
+    {recommended.length ? <section className="bg-cream px-5 py-16 sm:px-8 lg:py-24" aria-labelledby="recommended-heading"><div className="mx-auto max-w-7xl"><p className="text-xs font-extrabold tracking-[.16em] text-coral">A FEW FRIENDLY POINTERS</p><h2 id="recommended-heading" className="mt-2 font-display text-5xl leading-none text-forest sm:text-6xl">Good places to start</h2><p className="mt-4 max-w-2xl leading-relaxed text-forest/65">A small shortlist for when you’re not quite sure which door to knock on first.</p><div className="mt-9 grid gap-6 lg:grid-cols-2">{recommended.map((resource) => <RecommendedCard key={resource.id} resource={resource} />)}</div></div></section> : null}
+
+    <section ref={resultsRef} id="resources-results" className="scroll-mt-24 border-t border-forest/15 bg-cream-dim px-5 py-16 sm:px-8 lg:py-20" aria-labelledby="finder-heading">
+      <div className="mx-auto max-w-7xl"><div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_17rem] lg:items-end"><div><p className="text-xs font-extrabold tracking-[.16em] text-coral">SUPPORT FINDER</p><h2 id="finder-heading" className="mt-2 font-display text-5xl leading-none text-forest sm:text-6xl">Find your next step</h2></div><p className="text-sm leading-relaxed text-forest/60">Tags are a guide; the official provider decides eligibility.</p></div>
+        <div className="sticky top-[5.5rem] z-20 mt-8 border border-forest/15 bg-paper p-4 shadow-sm sm:p-5">
+          <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto_auto] lg:items-end"><label className="block"><span className="mb-2 block text-sm font-bold text-forest">Search</span><span className="relative block"><Search className="absolute left-3 top-1/2 -translate-y-1/2 text-forest/55" size={17} aria-hidden="true" /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search all resources" className="min-h-11 w-full border border-forest/30 bg-cream px-10 py-2 text-sm text-forest focus:border-coral focus:outline-none" /></span></label>
+            <fieldset><legend className="mb-2 text-sm font-bold text-forest">Category</legend><div className="flex max-w-full gap-2 overflow-x-auto pb-1">{([{ id: "", label: "All" }, ...categories] as Array<{ id: DirectoryCategory | ""; label: string }>).map((item) => <button key={item.id} type="button" onClick={() => setCategory(item.id)} aria-pressed={category === item.id} className="min-h-10 shrink-0 border border-forest/25 px-3 text-sm font-bold text-forest transition aria-pressed:bg-forest aria-pressed:text-cream focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-coral">{item.label}</button>)}</div></fieldset>
+            <label className="block"><span className="mb-2 block text-sm font-bold text-forest">Audience</span><select value={audience} onChange={(event) => setAudience(event.target.value as AudienceFilter)} className="min-h-11 w-full border border-forest/30 bg-cream px-3 text-sm text-forest focus:border-coral focus:outline-none"><option value="">Everyone</option>{Object.entries(audienceLabels).filter(([value]) => value !== "all-greenwich-students").map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
           </div>
-          <div className="relative mt-12 h-32 lg:hidden" aria-hidden="true"><div className="absolute left-1 top-1 h-24 w-24 rounded-full bg-green" /><div className="absolute left-14 top-5 rotate-2 border-2 border-forest bg-cream px-5 py-4 font-display text-xl italic text-forest shadow-[7px_7px_0_#e8734a]">Keep this handy.</div></div>
+          <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-forest/10 pt-4" aria-live="polite"><p className="mr-auto text-sm text-forest/65"><strong className="text-forest">{filtered.length}</strong> {filtered.length === 1 ? "resource" : "resources"} found</p>{category ? <span className="inline-flex items-center gap-1 bg-green/15 px-2 py-1 text-xs font-bold text-forest">{categories.find((item) => item.id === category)?.label}<button type="button" onClick={() => setCategory("")} aria-label="Remove category filter"><X size={13} /></button></span> : null}{audience ? <span className="inline-flex items-center gap-1 bg-green/15 px-2 py-1 text-xs font-bold text-forest">{audienceLabels[audience]}<button type="button" onClick={() => setAudience("")} aria-label="Remove audience filter"><X size={13} /></button></span> : null}{hasFilters ? <button type="button" onClick={clear} className="min-h-10 px-2 text-sm font-bold text-forest underline decoration-coral decoration-2 underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-coral">Clear filters</button> : null}</div>
         </div>
-      </section>
+        {filtered.length ? <div className="mt-9 grid gap-5 md:grid-cols-2 xl:grid-cols-3">{filtered.map((resource) => <ResourceCard key={resource.id} resource={resource} />)}</div> : <div className="mt-9 border-2 border-dashed border-forest/25 bg-paper px-6 py-12 text-center"><Search className="mx-auto text-green" size={32} aria-hidden="true" /><h3 className="mt-4 font-display text-3xl text-forest">We couldn’t find a match for that.</h3><p className="mx-auto mt-3 max-w-lg text-sm leading-relaxed text-forest/65">Try a broader search, or BrightFutures can point you towards an appropriate service.</p><div className="mt-6 flex flex-wrap justify-center gap-3"><button type="button" onClick={clear} className="min-h-11 bg-forest px-4 text-sm font-bold text-cream">Clear filters</button><Link to="/contact" className="inline-flex min-h-11 items-center px-4 text-sm font-bold text-forest underline decoration-coral decoration-2 underline-offset-4">Contact BrightFutures</Link></div></div>}
+      </div>
+    </section>
 
-      <section className="bg-cream-dim px-6 py-14 sm:px-8 lg:py-20" aria-labelledby="category-heading">
-        <div className="mx-auto max-w-7xl">
-          <div className="border-b-2 border-forest pb-6">
-            <h2 id="category-heading" className="font-display text-4xl text-forest sm:text-5xl">What do you need help with?</h2>
-            <p className="mt-3 text-forest/62">Jump straight to what you need.</p>
-          </div>
-          <nav className="mt-2" aria-label="Filter resources by what you need">
-            {categoryDetails.map(([slug, , journey, description]) => (
-              <button key={slug} type="button" aria-pressed={selectedCategory === slug} onClick={(event) => {
-                setSelectedCategory(slug);
-                if (event.detail > 0) window.setTimeout(() => document.getElementById("resources-results")?.scrollIntoView(), 0);
-              }} className="group grid w-full gap-1 border-b border-forest/20 px-2 py-5 text-left text-forest transition-colors hover:bg-paper focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-coral aria-pressed:bg-paper sm:grid-cols-[1fr_1fr_auto] sm:items-center sm:gap-6 sm:px-4">
-                <span className="font-display text-2xl font-semibold">{journey}</span>
-                <span className="pr-4 text-sm leading-relaxed text-forest/62">{description}</span>
-                <ArrowRight className="mt-2 transition-transform group-hover:translate-x-1 sm:mt-0" size={19} aria-hidden="true" />
-              </button>
-            ))}
-            {selectedCategory ? <button type="button" onClick={() => setSelectedCategory(null)} className="mt-5 font-bold text-forest underline decoration-coral decoration-2 underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-coral">Show all resources</button> : null}
-          </nav>
-        </div>
-      </section>
-
-      <section id="resources-results" className="scroll-mt-24 bg-cream px-6 py-16 sm:scroll-mt-28 sm:px-8 lg:py-24">
-        <div className="mx-auto max-w-7xl">
-          {!resources.length ? (
-            <div className="relative max-w-3xl border-l-4 border-coral py-3 pl-6 sm:pl-9">
-              <div className="absolute -right-20 -top-8 hidden h-36 w-36 rounded-full border-[18px] border-green/30 sm:block" aria-hidden="true" />
-              <h2 className="font-display text-4xl leading-tight text-forest sm:text-6xl">We’re putting this together properly.</h2>
-              <p className="mt-5 max-w-2xl text-lg leading-relaxed text-forest/70">Rather than filling this page with random links, we’re checking the services we recommend first. Got one we should know about?</p>
-              <Link to="/contact" className="mt-7 inline-flex items-center gap-2 bg-forest px-6 py-3.5 font-bold text-cream">Tell us about a resource <ArrowRight size={17} aria-hidden="true" /></Link>
-            </div>
-          ) : (
-            <>
-              <div className="mb-12 max-w-sm lg:mb-16">
-                <label htmlFor="audience-filter" className="block text-sm font-semibold text-forest">Filter by audience <span className="font-normal text-forest/55">(optional)</span></label>
-                <select id="audience-filter" value={selectedAudience} onChange={(event) => setSelectedAudience(event.target.value as ResourceAudience | "")} className="mt-2 w-full border border-forest/35 bg-paper px-3 py-3 text-sm text-forest focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-coral">
-                  <option value="">All audiences</option>
-                  {Object.entries(audienceLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
-                </select>
-                <p className="mt-2 text-xs leading-relaxed text-forest/55">Tags are a guide only. Check the provider’s criteria before applying.</p>
-              </div>
-              {startHereCandidates.length ? (
-                <section aria-labelledby="start-here-heading">
-                  <div className="border-b-2 border-forest pb-6">
-                    <h2 id="start-here-heading" className="font-display text-5xl leading-none text-forest sm:text-6xl">Recommended starting points</h2>
-                    <p className="mt-3 max-w-2xl text-forest/62">{selectedLabel ? `Useful places to try first for ${selectedLabel.toLowerCase()}.` : "A few useful Greenwich places to try first."}</p>
-                  </div>
-                  {recommended.length ? (
-                    <div className="mt-7 space-y-3">{recommended.map((resource) => <ResourceDetails key={resource.id} resource={resource} featured={resource.id === featured?.id} />)}</div>
-                  ) : (
-                    <p className="mt-6 border-l-2 border-green pl-4 text-sm text-forest/60">No single starting point is highlighted for this need yet. The checked options are below.</p>
-                  )}
-                </section>
-              ) : null}
-
-              <section className={startHereCandidates.length ? "mt-20 lg:mt-28" : ""} aria-labelledby="browse-heading">
-                <div className="border-b-2 border-forest pb-6">
-                  <h2 id="browse-heading" className="font-display text-5xl leading-none text-forest sm:text-6xl">Browse all resources</h2>
-                  <p className="mt-3 text-sm text-forest/62" aria-live="polite">{selectedAudienceLabel ? `${resultCount} resource${resultCount === 1 ? "" : "s"} available to ${selectedAudienceLabel.toLowerCase()}${selectedLabel ? ` in ${selectedLabel.toLowerCase()}` : ""}.` : selectedLabel ? `Showing ${selectedLabel.toLowerCase()} resources.` : "Grouped by what you need."}</p>
-                </div>
-                <div>
-                  {visibleCategories.map(([slug, label, , description]) => {
-                    const categoryResources = audienceFilteredResources.filter((resource) => directoryCategory(resource) === slug);
-                    return (
-                      <section key={slug} id={slug} className="scroll-mt-28 border-b-2 border-forest/25 py-12 last:border-b-0 sm:scroll-mt-32 sm:py-16" aria-labelledby={`${slug}-heading`}>
-                        <div className="grid gap-3 lg:grid-cols-[0.72fr_1.28fr] lg:gap-12">
-                          <h3 id={`${slug}-heading`} className="font-display text-4xl leading-none text-forest sm:text-5xl">{label}</h3>
-                          <p className="max-w-xl text-forest/60 lg:pt-2">{description}</p>
-                        </div>
-                        {categoryResources.length ? (
-                          <div className="mt-7 lg:ml-[calc(36%+1.5rem)]">{categoryResources.map((resource) => <ResourceDetails key={resource.id} resource={resource} />)}</div>
-                        ) : (
-                          <p className="mt-6 border-l-2 border-green pl-4 text-sm text-forest/55">{selectedAudience ? "No resources with this audience tag in this section." : "Nothing checked for this section yet."}</p>
-                        )}
-                      </section>
-                    );
-                  })}
-                </div>
-              </section>
-              <aside className="mt-12 border-t border-forest/20 pt-7 text-forest/70" aria-labelledby="not-sure-heading">
-                <h2 id="not-sure-heading" className="font-display text-2xl font-semibold text-forest">Not sure where to start?</h2>
-                <p className="mt-2 max-w-3xl leading-relaxed">BrightFutures can point you towards an appropriate service. We’re a student community and cannot provide emergency, counselling, housing, legal or financial advice.</p>
-                <p className="mt-4 text-sm">Something missing? <Link to="/contact" className="font-bold text-forest underline decoration-coral decoration-2 underline-offset-4">Tell us about a resource</Link>.</p>
-              </aside>
-            </>
-          )}
-        </div>
-      </section>
-    </div>
-  );
+    <section className="bg-forest px-5 py-14 text-cream sm:px-8 sm:py-18"><div className="mx-auto grid max-w-7xl gap-6 md:grid-cols-[1fr_auto] md:items-center"><div><p className="text-xs font-extrabold tracking-[.16em] text-coral-light">KEEP IT USEFUL</p><h2 className="mt-2 font-display text-5xl leading-none">Something missing?</h2><p className="mt-4 max-w-2xl leading-relaxed text-cream/75">If there’s a service, bursary or opportunity other students should know about, tell us.</p></div><Link to="/contact" className="inline-flex min-h-12 w-fit items-center gap-2 bg-coral px-5 py-3 text-sm font-bold text-forest transition hover:bg-coral-light focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-cream">Suggest a resource <ArrowRight size={17} aria-hidden="true" /></Link></div></section>
+  </div>;
 }

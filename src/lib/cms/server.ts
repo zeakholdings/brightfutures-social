@@ -4,6 +4,7 @@ import { createDirectus, createItem, rest, staticToken } from "@directus/sdk";
 import { createHash } from "node:crypto";
 import { z } from "zod";
 import { events as localEvents, type Event } from "@/data/events";
+import { checkedResources } from "@/data/resources";
 import { fallbackCommittee, readCommittee } from "./committee";
 import { readPublicEvent, readPublicEvents } from "./events";
 import { readPost, readPosts } from "./posts";
@@ -295,7 +296,8 @@ export async function getCommunityActions(): Promise<CommunityAction[]> {
 const getResourcesServer = createServerFn({ method: "GET" }).handler(
   async (): Promise<Resource[]> => {
     try {
-      return await cached<Resource[]>("resources", readResources, []);
+      const resources = await cached<Resource[]>("resources", readResources, checkedResources);
+      return resources.length ? resources : checkedResources;
     } catch (error) {
       console.error(
         "[CMS] Resources could not be loaded.",
