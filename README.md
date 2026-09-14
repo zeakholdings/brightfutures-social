@@ -31,6 +31,7 @@ The Art Wall uses the existing Directus instance and storage, never the Git repo
 
 ```bash
 DIRECTUS_URL=https://cms.brightfutures.social DIRECTUS_ADMIN_TOKEN='...' npm run cms:art-wall
+DIRECTUS_URL=https://cms.brightfutures.social DIRECTUS_ADMIN_TOKEN='...' DIRECTUS_ART_WALL_TOKEN='...' npm run cms:art-wall-access
 ```
 
 Set these runtime-only variables in the production environment:
