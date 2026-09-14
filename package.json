@@ -10,6 +10,7 @@
     "cms:setup": "node scripts/directus/setup.mjs",
     "cms:moderation": "node scripts/directus/setup-moderation.mjs",
     "cms:posts-editor": "node scripts/directus/setup-posts-editor.mjs",
+    "cms:art-wall": "node scripts/directus/setup-art-wall.mjs",
     "cms:setup:test": "node scripts/directus/test-setup-directus11.mjs",
     "cms:seed": "node scripts/directus/seed.mjs",
     "cms:migrate:resources": "node scripts/directus/migrate-resource-metadata.mjs",

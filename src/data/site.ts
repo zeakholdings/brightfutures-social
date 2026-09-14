@@ -18,6 +18,7 @@ export const nav = [
   { label: "Get Involved", to: "/get-involved" },
   { label: "Partnerships", to: "/partnerships" },
   { label: "Resources", to: "/resources" },
+  { label: "Art Wall", to: "/art-wall" },
   { label: "News & Stories", to: "/stories" },
 ] as const
 
@@ -25,6 +26,7 @@ export const footerGroups = [
   { label: "Explore", links: [
     { label: "What’s On", to: "/events" }, { label: "About", to: "/about" },
     { label: "News & Stories", to: "/stories" }, { label: "Member Highlights", to: "/highlights" },
+    { label: "Art Wall", to: "/art-wall" },
   ] },
   { label: "Get involved", links: [
     { label: "Join us", to: "/get-involved" }, { label: "Community Check-In", to: "/check-in" },

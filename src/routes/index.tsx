@@ -4,7 +4,9 @@ import { activityThemes, ideaCards, isUpcoming } from "@/data/events";
 import { IdeaForm } from "@/components/IdeaForm";
 import { HighlightCard } from "@/components/HighlightCard";
 import { CommunityActionCard } from "@/components/CommunityActionCard";
-import { getCommunityActions, getEvents, getHighlights, getSettings, getSocialCards } from "@/lib/cms/server";
+import { ArtWallCard } from "@/components/art-wall/ArtWallCard";
+import { getArtWall, getCommunityActions, getEvents, getHighlights, getSettings, getSocialCards } from "@/lib/cms/server";
+import type { ArtWallSubmission } from "@/data/art-wall";
 import type { CommunityAction, Event, MemberHighlight, SiteSettings, SocialCard } from "@/lib/cms/types";
 
 export const Route = createFileRoute("/")({
@@ -14,11 +16,12 @@ export const Route = createFileRoute("/")({
     socialCards: SocialCard[];
     highlights: MemberHighlight[];
     communityActions: CommunityAction[];
+    artWall: ArtWallSubmission[];
   }> => {
-    const [events, settings, socialCards, highlights, communityActions] = await Promise.all([
-      getEvents(), getSettings(), getSocialCards(), getHighlights(), getCommunityActions(),
+    const [events, settings, socialCards, highlights, communityActions, artWall] = await Promise.all([
+      getEvents(), getSettings(), getSocialCards(), getHighlights(), getCommunityActions(), getArtWall(),
     ]);
-    return { events, settings, socialCards, highlights, communityActions };
+    return { events, settings, socialCards, highlights, communityActions, artWall };
   },
   component: Home,
 });
@@ -68,7 +71,7 @@ function EventPoster({ event, index }: { event: Event; index: number }) {
 }
 
 function Home() {
-  const { events, settings, socialCards, highlights, communityActions } = Route.useLoaderData();
+  const { events, settings, socialCards, highlights, communityActions, artWall } = Route.useLoaderData();
   const upcoming = events
     .filter((event) => event.status === "confirmed" && isUpcoming(event))
     .sort((a, b) => new Date(a.startDate || 0).getTime() - new Date(b.startDate || 0).getTime())
@@ -161,6 +164,16 @@ function Home() {
           </div>
         </section>
       ) : null}
+
+      <section className="bg-cream-dim px-6 py-20 sm:px-8 lg:py-24" aria-labelledby="art-wall-home-heading">
+        <div className="mx-auto max-w-7xl">
+          <div className="flex flex-wrap items-end justify-between gap-5 border-b-2 border-forest pb-6">
+            <div><p className="text-xs font-extrabold tracking-[.16em] text-coral">FROM THE ART WALL</p><h2 id="art-wall-home-heading" className="mt-2 font-display text-5xl text-forest sm:text-6xl">Made by our community</h2></div>
+            <Link to="/art-wall" className="font-bold text-forest underline decoration-coral decoration-2 underline-offset-4">Explore the Art Wall</Link>
+          </div>
+          {artWall.length ? <div className="mt-9 grid gap-6 md:grid-cols-3">{artWall.slice(0, 3).map((work, index) => <ArtWallCard key={work.slug} work={work} index={index} />)}</div> : <p className="mt-7 max-w-xl text-forest/70">The wall is waiting for its first pieces. Draw something, write something or photograph something that matters to you.</p>}
+        </div>
+      </section>
 
       <section className="year-strip bg-forest py-20 text-cream lg:py-28" aria-labelledby="year-heading">
         <div className="mx-auto max-w-7xl px-6 sm:px-8">

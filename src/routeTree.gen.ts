@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as AccessibilityRouteImport } from './routes/accessibility'
+import { Route as ArtWallRouteImport } from './routes/art-wall'
 import { Route as CheckInRouteImport } from './routes/check-in'
 import { Route as CommunityGuidelinesRouteImport } from './routes/community-guidelines'
 import { Route as ContactRouteImport } from './routes/contact'
@@ -25,6 +26,9 @@ import { Route as ResourcesRouteImport } from './routes/resources'
 import { Route as StoriesRouteImport } from './routes/stories'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as VoiceRouteImport } from './routes/voice'
+import { Route as AdminArtWallRouteImport } from './routes/admin/art-wall'
+import { Route as ArtWallSlugRouteImport } from './routes/art-wall.$slug'
+import { Route as ArtWallSubmitRouteImport } from './routes/art-wall.submit'
 import { Route as EventsSlugRouteImport } from './routes/events.$slug'
 import { Route as PartnershipsPerksRouteImport } from './routes/partnerships_.perks'
 import { Route as StoriesSlugRouteImport } from './routes/stories.$slug'
@@ -42,6 +46,11 @@ const AboutRoute = AboutRouteImport.update({
 const AccessibilityRoute = AccessibilityRouteImport.update({
   id: '/accessibility',
   path: '/accessibility',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ArtWallRoute = ArtWallRouteImport.update({
+  id: '/art-wall',
+  path: '/art-wall',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CheckInRoute = CheckInRouteImport.update({
@@ -109,6 +118,21 @@ const VoiceRoute = VoiceRouteImport.update({
   path: '/voice',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminArtWallRoute = AdminArtWallRouteImport.update({
+  id: '/admin/art-wall',
+  path: '/admin/art-wall',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ArtWallSlugRoute = ArtWallSlugRouteImport.update({
+  id: '/$slug',
+  path: '/$slug',
+  getParentRoute: () => ArtWallRoute,
+} as any)
+const ArtWallSubmitRoute = ArtWallSubmitRouteImport.update({
+  id: '/submit',
+  path: '/submit',
+  getParentRoute: () => ArtWallRoute,
+} as any)
 const EventsSlugRoute = EventsSlugRouteImport.update({
   id: '/$slug',
   path: '/$slug',
@@ -129,6 +153,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/accessibility': typeof AccessibilityRoute
+  '/art-wall': typeof ArtWallRouteWithChildren
   '/check-in': typeof CheckInRoute
   '/community-guidelines': typeof CommunityGuidelinesRoute
   '/contact': typeof ContactRoute
@@ -142,6 +167,9 @@ export interface FileRoutesByFullPath {
   '/stories': typeof StoriesRouteWithChildren
   '/terms': typeof TermsRoute
   '/voice': typeof VoiceRoute
+  '/admin/art-wall': typeof AdminArtWallRoute
+  '/art-wall/$slug': typeof ArtWallSlugRoute
+  '/art-wall/submit': typeof ArtWallSubmitRoute
   '/events/$slug': typeof EventsSlugRoute
   '/partnerships/perks': typeof PartnershipsPerksRoute
   '/stories/$slug': typeof StoriesSlugRoute
@@ -150,6 +178,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/accessibility': typeof AccessibilityRoute
+  '/art-wall': typeof ArtWallRouteWithChildren
   '/check-in': typeof CheckInRoute
   '/community-guidelines': typeof CommunityGuidelinesRoute
   '/contact': typeof ContactRoute
@@ -163,6 +192,9 @@ export interface FileRoutesByTo {
   '/stories': typeof StoriesRouteWithChildren
   '/terms': typeof TermsRoute
   '/voice': typeof VoiceRoute
+  '/admin/art-wall': typeof AdminArtWallRoute
+  '/art-wall/$slug': typeof ArtWallSlugRoute
+  '/art-wall/submit': typeof ArtWallSubmitRoute
   '/events/$slug': typeof EventsSlugRoute
   '/partnerships/perks': typeof PartnershipsPerksRoute
   '/stories/$slug': typeof StoriesSlugRoute
@@ -172,6 +204,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/accessibility': typeof AccessibilityRoute
+  '/art-wall': typeof ArtWallRouteWithChildren
   '/check-in': typeof CheckInRoute
   '/community-guidelines': typeof CommunityGuidelinesRoute
   '/contact': typeof ContactRoute
@@ -185,6 +218,9 @@ export interface FileRoutesById {
   '/stories': typeof StoriesRouteWithChildren
   '/terms': typeof TermsRoute
   '/voice': typeof VoiceRoute
+  '/admin/art-wall': typeof AdminArtWallRoute
+  '/art-wall/$slug': typeof ArtWallSlugRoute
+  '/art-wall/submit': typeof ArtWallSubmitRoute
   '/events/$slug': typeof EventsSlugRoute
   '/partnerships_/perks': typeof PartnershipsPerksRoute
   '/stories/$slug': typeof StoriesSlugRoute
@@ -195,6 +231,7 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/accessibility'
+    | '/art-wall'
     | '/check-in'
     | '/community-guidelines'
     | '/contact'
@@ -208,6 +245,9 @@ export interface FileRouteTypes {
     | '/stories'
     | '/terms'
     | '/voice'
+    | '/admin/art-wall'
+    | '/art-wall/$slug'
+    | '/art-wall/submit'
     | '/events/$slug'
     | '/partnerships/perks'
     | '/stories/$slug'
@@ -216,6 +256,7 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/accessibility'
+    | '/art-wall'
     | '/check-in'
     | '/community-guidelines'
     | '/contact'
@@ -229,6 +270,9 @@ export interface FileRouteTypes {
     | '/stories'
     | '/terms'
     | '/voice'
+    | '/admin/art-wall'
+    | '/art-wall/$slug'
+    | '/art-wall/submit'
     | '/events/$slug'
     | '/partnerships/perks'
     | '/stories/$slug'
@@ -237,6 +281,7 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/accessibility'
+    | '/art-wall'
     | '/check-in'
     | '/community-guidelines'
     | '/contact'
@@ -250,6 +295,9 @@ export interface FileRouteTypes {
     | '/stories'
     | '/terms'
     | '/voice'
+    | '/admin/art-wall'
+    | '/art-wall/$slug'
+    | '/art-wall/submit'
     | '/events/$slug'
     | '/partnerships_/perks'
     | '/stories/$slug'
@@ -259,6 +307,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
   AccessibilityRoute: typeof AccessibilityRoute
+  ArtWallRoute: typeof ArtWallRouteWithChildren
   CheckInRoute: typeof CheckInRoute
   CommunityGuidelinesRoute: typeof CommunityGuidelinesRoute
   ContactRoute: typeof ContactRoute
@@ -272,6 +321,7 @@ export interface RootRouteChildren {
   StoriesRoute: typeof StoriesRouteWithChildren
   TermsRoute: typeof TermsRoute
   VoiceRoute: typeof VoiceRoute
+  AdminArtWallRoute: typeof AdminArtWallRoute
   PartnershipsPerksRoute: typeof PartnershipsPerksRoute
 }
 
@@ -296,6 +346,13 @@ declare module '@tanstack/react-router' {
       path: '/accessibility'
       fullPath: '/accessibility'
       preLoaderRoute: typeof AccessibilityRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/art-wall': {
+      id: '/art-wall'
+      path: '/art-wall'
+      fullPath: '/art-wall'
+      preLoaderRoute: typeof ArtWallRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/check-in': {
@@ -389,6 +446,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof VoiceRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/art-wall': {
+      id: '/admin/art-wall'
+      path: '/admin/art-wall'
+      fullPath: '/admin/art-wall'
+      preLoaderRoute: typeof AdminArtWallRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/art-wall/$slug': {
+      id: '/art-wall/$slug'
+      path: '/$slug'
+      fullPath: '/art-wall/$slug'
+      preLoaderRoute: typeof ArtWallSlugRouteImport
+      parentRoute: typeof ArtWallRoute
+    }
+    '/art-wall/submit': {
+      id: '/art-wall/submit'
+      path: '/submit'
+      fullPath: '/art-wall/submit'
+      preLoaderRoute: typeof ArtWallSubmitRouteImport
+      parentRoute: typeof ArtWallRoute
+    }
     '/events/$slug': {
       id: '/events/$slug'
       path: '/$slug'
@@ -412,6 +490,19 @@ declare module '@tanstack/react-router' {
     }
   }
 }
+
+interface ArtWallRouteChildren {
+  ArtWallSlugRoute: typeof ArtWallSlugRoute
+  ArtWallSubmitRoute: typeof ArtWallSubmitRoute
+}
+
+const ArtWallRouteChildren: ArtWallRouteChildren = {
+  ArtWallSlugRoute: ArtWallSlugRoute,
+  ArtWallSubmitRoute: ArtWallSubmitRoute,
+}
+
+const ArtWallRouteWithChildren =
+  ArtWallRoute._addFileChildren(ArtWallRouteChildren)
 
 interface EventsRouteChildren {
   EventsSlugRoute: typeof EventsSlugRoute
@@ -439,6 +530,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
   AccessibilityRoute: AccessibilityRoute,
+  ArtWallRoute: ArtWallRouteWithChildren,
   CheckInRoute: CheckInRoute,
   CommunityGuidelinesRoute: CommunityGuidelinesRoute,
   ContactRoute: ContactRoute,
@@ -452,6 +544,7 @@ const rootRouteChildren: RootRouteChildren = {
   StoriesRoute: StoriesRouteWithChildren,
   TermsRoute: TermsRoute,
   VoiceRoute: VoiceRoute,
+  AdminArtWallRoute: AdminArtWallRoute,
   PartnershipsPerksRoute: PartnershipsPerksRoute,
 }
 export const routeTree = rootRouteImport
