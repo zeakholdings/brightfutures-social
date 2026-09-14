@@ -1,4 +1,5 @@
 import { createMiddleware, createStart } from "@tanstack/react-start"
+import { approvedArtWallMedia } from "@/lib/cms/art-wall-media"
 
 const contentSecurityPolicy = [
   "default-src 'self'",
@@ -18,7 +19,9 @@ const contentSecurityPolicy = [
   "upgrade-insecure-requests",
 ].join("; ")
 
-const securityHeaders = createMiddleware().server(async ({ next }) => {
+const securityHeaders = createMiddleware().server(async ({ next, pathname }) => {
+  const match = pathname.match(/^\/art-wall\/media\/([^/]+)$/)
+  if (match) return approvedArtWallMedia(match[1])
   const result = await next()
   const headers = new Headers(result.response.headers)
   headers.set("Content-Security-Policy", contentSecurityPolicy)

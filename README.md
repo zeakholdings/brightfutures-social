@@ -35,11 +35,12 @@ DIRECTUS_URL=https://cms.brightfutures.social DIRECTUS_ADMIN_TOKEN='...' npm run
 
 Set these runtime-only variables in the production environment:
 
-- `DIRECTUS_SERVER_TOKEN`: a server-only Directus token with create access to `art_wall_submissions`, upload access to Directus Files, and read/update access only for the private moderator workflow.
+- `DIRECTUS_ART_WALL_TOKEN`: dedicated, server-only least-privilege token for Art Wall submission creation, Art Wall file upload/read, moderation reads/updates, and approved-media delivery. This is preferred in production.
+- `DIRECTUS_SERVER_TOKEN`: fallback only for legacy deployments while `DIRECTUS_ART_WALL_TOKEN` is being provisioned. It is never sent to the browser.
 - `DIRECTUS_ART_WALL_FOLDER`: optional Directus folder UUID for Art Wall media.
 - `ART_WALL_ADMIN_TOKEN`: a long random moderation passcode. It is checked only by TanStack server functions and must not use a `VITE_` or `PUBLIC_` prefix.
 
-In Directus, keep anonymous access to `art_wall_submissions` disabled. The website reads a deliberately limited public field set server-side and filters it to `moderation_status = approved`, a non-null `published_at`, and no `removed_at`. Pending asset IDs are never returned to visitors. Configure the Files role so only approved assets can be served publicly, or use a private storage adapter with an approved-media delivery rule. The moderation route is `/admin/art-wall`; do not share its passcode and rotate `ART_WALL_ADMIN_TOKEN` if it is disclosed.
+In Directus, keep anonymous access to both `art_wall_submissions` and Art Wall Files disabled. The website reads a deliberately limited public field set server-side and filters it to `moderation_status = approved`, a non-null `published_at`, and no `removed_at`. Art Wall images are delivered only through `/art-wall/media/<file-id>`; the app verifies the approved record server-side and streams the private Directus asset without redirecting the visitor to Directus. Pending asset IDs are never returned to visitors. The moderation route is `/admin/art-wall`; do not share its passcode and rotate `ART_WALL_ADMIN_TOKEN` if it is disclosed.
 
 Before enabling this in production, create a dedicated Directus policy for the runtime token, apply the collection setup, and make one safe test submission. Check it remains pending, approve it in the private queue, confirm it appears at `/art-wall`, then remove it again.
 

@@ -372,6 +372,15 @@ function privateClient() {
   if (!token) throw new Error("Submissions are temporarily unavailable.");
   return createDirectus(url).with(staticToken(token)).with(rest());
 }
+function artWallToken() {
+  return process.env.DIRECTUS_ART_WALL_TOKEN || process.env.DIRECTUS_SERVER_TOKEN;
+}
+function artWallClient() {
+  const url = process.env.DIRECTUS_URL || "https://cms.brightfutures.social";
+  const token = artWallToken();
+  if (!token) throw new Error("Art Wall submissions are temporarily unavailable.");
+  return createDirectus(url).with(staticToken(token)).with(rest());
+}
 
 const artCleanText = (maximum: number) => z.string().max(maximum).transform((value) => value.normalize("NFKC").replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, "").trim());
 const artWallInput = z.object({
@@ -405,7 +414,7 @@ async function uploadArtWallImage(dataUrl: string, mime: string) {
   const form = new FormData();
   form.append("file", image, `art-wall-${crypto.randomUUID()}.${extension}`);
   form.append("folder", process.env.DIRECTUS_ART_WALL_FOLDER || "");
-  const response = await fetch(`${(process.env.DIRECTUS_URL || "https://cms.brightfutures.social").replace(/\/$/, "")}/files`, { method: "POST", headers: { Authorization: `Bearer ${process.env.DIRECTUS_SERVER_TOKEN}` }, body: form });
+  const response = await fetch(`${(process.env.DIRECTUS_URL || "https://cms.brightfutures.social").replace(/\/$/, "")}/files`, { method: "POST", headers: { Authorization: `Bearer ${artWallToken()}` }, body: form });
   if (!response.ok) throw new Error("We couldn't upload that image. Your form hasn't been submitted yet, so please try again.");
   const payload = await response.json() as { data?: { id?: string } };
   if (!payload.data?.id) throw new Error("We couldn't upload that image. Your form hasn't been submitted yet, so please try again.");
@@ -416,16 +425,16 @@ export const submitArtWall = createServerFn({ method: "POST" }).validator(artWal
   const file = data.image ? await uploadArtWallImage(data.image, data.imageType) : null;
   const displayName = data.displayPreference === "anonymous" ? null : data.displayPreference === "first-name" ? data.displayName.split(/\s+/)[0] || null : data.displayName;
   const baseSlug = data.title.toLocaleLowerCase("en-GB").normalize("NFKD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 70) || "untitled-work";
-  await privateClient().request(createItem("art_wall_submissions", { slug: `${baseSlug}-${crypto.randomUUID().slice(0, 8)}`, title: data.title, submission_type: data.submissionType, display_name: displayName, is_anonymous: data.displayPreference === "anonymous", contact_email: data.contactEmail, description: data.description || null, text_content: data.textContent || null, file, alt_text: data.altText || null, theme_slug: data.themeSlug || null, content_note: data.contentNote || null, moderation_status: "pending", consent_given: true, guidelines_accepted: true }));
+  await artWallClient().request(createItem("art_wall_submissions", { slug: `${baseSlug}-${crypto.randomUUID().slice(0, 8)}`, title: data.title, submission_type: data.submissionType, display_name: displayName, is_anonymous: data.displayPreference === "anonymous", contact_email: data.contactEmail, description: data.description || null, text_content: data.textContent || null, file, alt_text: data.altText || null, theme_slug: data.themeSlug || null, content_note: data.contentNote || null, moderation_status: "pending", consent_given: true, guidelines_accepted: true }));
   return { ok: true };
 });
 
-type AdminArtWall = ArtWallSubmission & { id: string; contactEmail: string; moderationStatus: ModerationStatus; moderationNotes: string | null; requiresSafeguardingReview: boolean; submittedAt: string | null }
+type AdminArtWall = ArtWallSubmission & { id: string; fileId: string | null; contactEmail: string; moderationStatus: ModerationStatus; moderationNotes: string | null; requiresSafeguardingReview: boolean; submittedAt: string | null }
 export const getAdminArtWall = createServerFn({ method: "POST" }).validator(z.object({ token: z.string().min(1).max(500) })).handler(async ({ data }) => {
   // TanStack server functions do not forward custom headers from this call, so compare the submitted secret server-side only.
   if (!process.env.ART_WALL_ADMIN_TOKEN || data.token !== process.env.ART_WALL_ADMIN_TOKEN) throw new Error("That moderation passcode was not recognised.");
-  const rows = await privateClient().request(readItems("art_wall_submissions", { fields: ["id", "slug", "title", "submission_type", "display_name", "is_anonymous", "contact_email", "description", "text_content", "file", "alt_text", "theme_slug", "content_note", "reveal_content", "featured", "published_at", "moderation_status", "moderation_notes", "requires_safeguarding_review", "submitted_at"], sort: ["-submitted_at"], limit: 200 })) as unknown as Array<Record<string, unknown>>;
-  return rows.map((r) => ({ id: String(r.id), slug: String(r.slug || ""), title: String(r.title), type: r.submission_type as ArtWallType, displayName: r.is_anonymous ? "Anonymous" : (r.display_name as string | null) || "Anonymous", isAnonymous: !!r.is_anonymous, description: (r.description as string | null) || null, textContent: (r.text_content as string | null) || null, imageUrl: assetUrl(r.file as string | null) || null, altText: (r.alt_text as string | null) || null, theme: (r.theme_slug as string | null) || null, contentNote: (r.content_note as string | null) || null, revealContent: !!r.reveal_content, featured: !!r.featured, publishedAt: (r.published_at as string | null) || null, contactEmail: String(r.contact_email), moderationStatus: r.moderation_status as ModerationStatus, moderationNotes: (r.moderation_notes as string | null) || null, requiresSafeguardingReview: !!r.requires_safeguarding_review, submittedAt: (r.submitted_at as string | null) || null } satisfies AdminArtWall));
+  const rows = await artWallClient().request(readItems("art_wall_submissions", { fields: ["id", "slug", "title", "submission_type", "display_name", "is_anonymous", "contact_email", "description", "text_content", "file", "alt_text", "theme_slug", "content_note", "reveal_content", "featured", "published_at", "moderation_status", "moderation_notes", "requires_safeguarding_review", "submitted_at"], sort: ["-submitted_at"], limit: 200 })) as unknown as Array<Record<string, unknown>>;
+  return rows.map((r) => ({ id: String(r.id), slug: String(r.slug || ""), title: String(r.title), type: r.submission_type as ArtWallType, displayName: r.is_anonymous ? "Anonymous" : (r.display_name as string | null) || "Anonymous", isAnonymous: !!r.is_anonymous, description: (r.description as string | null) || null, textContent: (r.text_content as string | null) || null, imageUrl: null, fileId: (r.file as string | null) || null, altText: (r.alt_text as string | null) || null, theme: (r.theme_slug as string | null) || null, contentNote: (r.content_note as string | null) || null, revealContent: !!r.reveal_content, featured: !!r.featured, publishedAt: (r.published_at as string | null) || null, contactEmail: String(r.contact_email), moderationStatus: r.moderation_status as ModerationStatus, moderationNotes: (r.moderation_notes as string | null) || null, requiresSafeguardingReview: !!r.requires_safeguarding_review, submittedAt: (r.submitted_at as string | null) || null } satisfies AdminArtWall));
 });
 export const moderateArtWall = createServerFn({ method: "POST" }).validator(z.object({ token: z.string().min(1).max(500), id: z.string().uuid(), action: z.enum(["approve", "reject", "remove", "restore", "feature", "unfeature", "safeguard", "unsafeguard"]), notes: artCleanText(2000) })).handler(async ({ data }) => {
   if (!process.env.ART_WALL_ADMIN_TOKEN || data.token !== process.env.ART_WALL_ADMIN_TOKEN) throw new Error("Your moderation session has expired. Please sign in again.");
@@ -436,7 +445,7 @@ export const moderateArtWall = createServerFn({ method: "POST" }).validator(z.ob
   if (data.action === "restore") Object.assign(changes, { moderation_status: "approved", removed_at: null, published_at: now });
   if (data.action === "feature") changes.featured = true; if (data.action === "unfeature") changes.featured = false;
   if (data.action === "safeguard") changes.requires_safeguarding_review = true; if (data.action === "unsafeguard") changes.requires_safeguarding_review = false;
-  await privateClient().request(updateItem("art_wall_submissions", data.id, changes));
+  await artWallClient().request(updateItem("art_wall_submissions", data.id, changes));
   return { ok: true };
 });
 const contactInput = z.object({
