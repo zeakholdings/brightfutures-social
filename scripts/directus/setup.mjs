@@ -313,6 +313,30 @@ const collections = {
       }),
       field("suggested_slots", "json", {}, {
         interface: "list",
+        options: {
+          template: "{{start}} → {{end}}",
+          fields: [
+            {
+              field: "start",
+              name: "Start",
+              type: "timestamp",
+              meta: {
+                interface: "datetime",
+                width: "half",
+                required: true,
+              },
+            },
+            {
+              field: "end",
+              name: "End",
+              type: "timestamp",
+              meta: {
+                interface: "datetime",
+                width: "half",
+              },
+            },
+          ],
+        },
         note: "Structured member-suggested date/time slots. These are private and are not poll options until an organiser adds one.",
       }),
       field("comment", "text"),
