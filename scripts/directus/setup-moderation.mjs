@@ -114,7 +114,7 @@ await patchField("events", "status", {
   },
 });
 await patchField("events", "interest_options", {
-  note: "Interest Check only. Add JSON such as [{\"id\":\"sat-1400\",\"label\":\"Saturday 3 October, 2–4pm\",\"start\":\"2026-10-03T14:00:00+01:00\",\"end\":\"2026-10-03T16:00:00+01:00\"}]. Keep IDs stable while voting is open.",
+  note: "Interest Check only. Add poll choices with the repeater: choose a start, optional end and optional display wording. Drag options to reorder them.",
 });
 await patchField("events", "interest_closes_at", {
   note: "Optional. The public form closes automatically after this date/time.",
