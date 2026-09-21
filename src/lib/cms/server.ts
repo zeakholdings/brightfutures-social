@@ -199,24 +199,87 @@ const eventInterestInput = z.object({
   website: z.string().max(0),
 });
 
+function friendlyPollTime(value: string) {
+  return new Intl.DateTimeFormat("en-GB", {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+    timeZone: "Europe/London",
+  })
+    .format(new Date(value))
+    .replace(":00", "")
+    .replace(/\s/g, "")
+    .toLowerCase();
+}
+
+function friendlyPollLabel(start: string, end?: string) {
+  const date = new Intl.DateTimeFormat("en-GB", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    timeZone: "Europe/London",
+  }).format(new Date(start));
+  if (!end) return `${date}, ${friendlyPollTime(start)}`;
+
+  const sameDay =
+    new Intl.DateTimeFormat("en-CA", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      timeZone: "Europe/London",
+    }).format(new Date(start)) ===
+    new Intl.DateTimeFormat("en-CA", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      timeZone: "Europe/London",
+    }).format(new Date(end));
+
+  return sameDay
+    ? `${date}, ${friendlyPollTime(start)}–${friendlyPollTime(end)}`
+    : `${date}, ${friendlyPollTime(start)} → ${friendlyPollTime(end)}`;
+}
+
 function normaliseInterestOptions(value: unknown): EventInterestOption[] {
   if (!Array.isArray(value)) return [];
-  return value
-    .filter(
-      (option): option is EventInterestOption =>
-        !!option &&
-        typeof option === "object" &&
-        typeof (option as EventInterestOption).id === "string" &&
-        !!(option as EventInterestOption).id.trim() &&
-        typeof (option as EventInterestOption).label === "string" &&
-        !!(option as EventInterestOption).label.trim(),
-    )
-    .map((option) => ({
-      id: option.id.trim().slice(0, 100),
-      label: option.label.trim().slice(0, 220),
-      start: option.start || undefined,
-      end: option.end || undefined,
-    }));
+  const options: EventInterestOption[] = [];
+
+  for (const raw of value) {
+    if (!raw || typeof raw !== "object") continue;
+    const option = raw as {
+      id?: unknown;
+      label?: unknown;
+      start?: unknown;
+      end?: unknown;
+    };
+    const start =
+      typeof option.start === "string" && Number.isFinite(Date.parse(option.start))
+        ? option.start
+        : undefined;
+    const end =
+      typeof option.end === "string" && Number.isFinite(Date.parse(option.end))
+        ? option.end
+        : undefined;
+    const customLabel =
+      typeof option.label === "string" ? option.label.trim().slice(0, 220) : "";
+    if (!start && !customLabel) continue;
+
+    const label = customLabel || friendlyPollLabel(start!, end);
+    const existingId =
+      typeof option.id === "string" ? option.id.trim().slice(0, 100) : "";
+    const generatedId = `slot-${createHash("sha256")
+      .update(start ? `${start}|${end || ""}` : label)
+      .digest("hex")
+      .slice(0, 16)}`;
+
+    options.push({
+      id: existingId || generatedId,
+      label,
+      start,
+      end,
+    });
+  }
+  return options;
 }
 
 export const submitEventInterest = createServerFn({ method: "POST" })

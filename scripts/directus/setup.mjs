@@ -25,9 +25,44 @@ const collections = {
       field("end_date", "timestamp"),
       field("time_display", "string"),
       field("interest_options", "json", {}, {
-        interface: "input-code",
-        options: { language: "json", lineNumber: true },
-        note: "For Interest Check events only. JSON array of { id, label, start?, end? }. Keep each id stable while responses are open.",
+        interface: "list",
+        options: {
+          template: "{{start}} · {{label}}",
+          fields: [
+            {
+              field: "start",
+              name: "Start",
+              type: "timestamp",
+              meta: {
+                interface: "datetime",
+                width: "half",
+                required: true,
+                note: "Choose the proposed date and start time.",
+              },
+            },
+            {
+              field: "end",
+              name: "End",
+              type: "timestamp",
+              meta: {
+                interface: "datetime",
+                width: "half",
+                note: "Optional end time.",
+              },
+            },
+            {
+              field: "label",
+              name: "Display wording",
+              type: "string",
+              meta: {
+                interface: "input",
+                width: "full",
+                note: "Optional. Leave blank and BrightFutures will create a friendly date/time label automatically.",
+              },
+            },
+          ],
+        },
+        note: "Interest Check only. Use Add Item to build poll choices; drag items to reorder them. No JSON editing is needed.",
       }),
       field("interest_closes_at", "timestamp", {}, {
         note: "Optional closing time for availability responses. Leave blank to keep the interest check open.",

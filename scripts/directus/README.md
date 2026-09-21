@@ -99,19 +99,14 @@ and **Completed** events are public. Draft, Provisional and Cancelled events are
 private. `published_at` is a legacy field and is not part of the event visibility
 rule.
 
-Interest Check events may have a null `start_date`. Configure
-`interest_options` as a JSON array of stable objects such as:
-
-```json
-[
-  {
-    "id": "sat-1400",
-    "label": "Saturday 3 October, 2–4pm",
-    "start": "2026-10-03T14:00:00+01:00",
-    "end": "2026-10-03T16:00:00+01:00"
-  }
-]
-```
+Interest Check events may have a null `start_date`. The
+`interest_options` field uses Directus' repeater interface as a poll builder.
+Editors use **Add Item** for each proposed slot, choose the start date/time,
+optionally choose an end time, and may add custom display wording. When display
+wording is blank, the website generates a friendly label automatically. The
+website also generates stable option IDs from the slot date/time so editors do
+not have to manage technical identifiers. Reordering poll choices does not change
+their IDs.
 
 Member responses are stored privately in `event_interest_responses`; the public
 Directus policy receives no access to that collection. The website service policy
