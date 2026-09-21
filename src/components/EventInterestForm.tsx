@@ -35,6 +35,7 @@ export function EventInterestForm({
     website: "",
   });
   const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
+  const [errorMessage, setErrorMessage] = useState("");
   const [updated, setUpdated] = useState(false);
   const closed = useMemo(
     () => !!closesAt && Number.isFinite(Date.parse(closesAt)) && Date.parse(closesAt) <= Date.now(),
@@ -49,6 +50,7 @@ export function EventInterestForm({
       suggestedSlots: attendance === "no" ? [] : current.suggestedSlots,
     }));
     if (status === "error") setStatus("idle");
+    setErrorMessage("");
   };
 
   const toggleOption = (id: string) => {
@@ -59,11 +61,13 @@ export function EventInterestForm({
         : [...current.availability, id],
     }));
     if (status === "error") setStatus("idle");
+    setErrorMessage("");
   };
 
   const change = (event: React.ChangeEvent<HTMLInputElement>) => {
     setFields((current) => ({ ...current, [event.target.name]: event.target.value }));
     if (status === "error") setStatus("idle");
+    setErrorMessage("");
   };
 
   const updateSuggestion = (index: number, field: keyof SuggestedSlotDraft, value: string) => {
@@ -74,6 +78,7 @@ export function EventInterestForm({
       ),
     }));
     if (status === "error") setStatus("idle");
+    setErrorMessage("");
   };
 
   const suggestedSlots = fields.suggestedSlots
@@ -100,7 +105,8 @@ export function EventInterestForm({
       });
       setUpdated(!!result.updated);
       setStatus("sent");
-    } catch {
+    } catch (reason) {
+      setErrorMessage(reason instanceof Error && reason.message ? reason.message : "We couldn’t save that response. Your choices are still here, so please try again.");
       setStatus("error");
     }
   };
@@ -244,7 +250,7 @@ export function EventInterestForm({
             </button>
             <p className="max-w-sm text-xs leading-relaxed text-forest/50">Submitting again from the same connection updates your response rather than counting you twice.</p>
           </div>
-          {status === "error" ? <p role="alert" className="border-l-4 border-coral pl-3 text-sm font-semibold text-coral">We couldn’t save that response. Your choices are still here, so please try again.</p> : null}
+          {status === "error" ? <p role="alert" className="border-l-4 border-coral pl-3 text-sm font-semibold text-coral">{errorMessage}</p> : null}
         </form>
       </div>
     </section>
