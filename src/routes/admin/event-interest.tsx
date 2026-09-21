@@ -3,6 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { CalendarCheck2, CheckCircle2, UsersRound } from "lucide-react";
 import {
+  addSuggestedEventInterestOption,
   confirmEventInterestOption,
   getEventInterestAdmin,
 } from "@/lib/cms/server";
@@ -20,6 +21,7 @@ type Summary = Awaited<ReturnType<typeof getEventInterestAdmin>>[number];
 function EventInterestAdmin() {
   const load = useServerFn(getEventInterestAdmin);
   const confirmSlot = useServerFn(confirmEventInterestOption);
+  const addSuggestion = useServerFn(addSuggestedEventInterestOption);
   const [token, setToken] = useState("");
   const [items, setItems] = useState<Summary[] | null>(null);
   const [error, setError] = useState("");
@@ -58,6 +60,20 @@ function EventInterestAdmin() {
           ? reason.message
           : "We couldn’t confirm that date.",
       );
+    } finally {
+      setBusy("");
+    }
+  }
+
+  async function addToPoll(eventSlug: string, slot: { start: string; end?: string }) {
+    const key = `${eventSlug}:${slot.start}:${slot.end || ""}`;
+    try {
+      setBusy(key);
+      setError("");
+      await addSuggestion({ data: { token, eventSlug, ...slot } });
+      setItems(await load({ data: { token } }));
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "We couldn’t add that suggested time to the poll.");
     } finally {
       setBusy("");
     }
@@ -210,6 +226,23 @@ function EventInterestAdmin() {
 
                   <aside>
                     <div className="flex items-center gap-3">
+                      <CalendarCheck2 className="text-coral" />
+                      <h3 className="font-display text-3xl text-forest">Member-suggested times</h3>
+                    </div>
+                    <p className="mt-2 text-sm text-forest/60">These are separate from the poll until you choose to add one.</p>
+                    <div className="mt-5 grid gap-3">
+                      {item.suggestedSlots.map((slot) => {
+                        const key = `${item.slug}:${slot.start}:${slot.end || ""}`;
+                        return <div key={key} className="border-2 border-green/50 bg-green/10 p-4">
+                          <p className="font-bold text-forest">{formatSuggestedSlot(slot)}</p>
+                          <p className="mt-1 text-sm text-forest/65">Suggested by {slot.count} {slot.count === 1 ? "person" : "people"}</p>
+                          {item.status === "interest-check" ? <button type="button" disabled={busy === key} onClick={() => addToPoll(item.slug, slot)} className="mt-3 min-h-10 bg-forest px-4 py-2 text-sm font-bold text-cream hover:bg-coral disabled:opacity-60">{busy === key ? "Adding…" : "Add to poll"}</button> : null}
+                        </div>;
+                      })}
+                      {!item.suggestedSlots.length ? <p className="border border-forest/15 bg-cream p-4 text-sm text-forest/60">No alternative times suggested yet.</p> : null}
+                    </div>
+
+                    <div className="mt-10 flex items-center gap-3">
                       <UsersRound className="text-green" />
                       <h3 className="font-display text-3xl text-forest">Recent responses</h3>
                     </div>
@@ -231,11 +264,7 @@ function EventInterestAdmin() {
                                 .join(" · ")}
                             </p>
                           ) : null}
-                          {response.comment ? (
-                            <p className="mt-2 text-sm leading-relaxed text-forest/65">
-                              {response.comment}
-                            </p>
-                          ) : null}
+                          {response.suggestedSlots.length ? <p className="mt-2 text-sm text-forest/65">Suggested: {response.suggestedSlots.map(formatSuggestedSlot).join(" · ")}</p> : null}
                           {response.email ? (
                             <p className="mt-2 break-all text-xs text-forest/55">
                               {response.email}
@@ -264,6 +293,12 @@ function EventInterestAdmin() {
       </div>
     </main>
   );
+}
+
+function formatSuggestedSlot(slot: { start: string; end?: string }) {
+  const date = new Intl.DateTimeFormat("en-GB", { weekday: "long", day: "numeric", month: "long", timeZone: "Europe/London" }).format(new Date(slot.start));
+  const time = (value: string) => new Intl.DateTimeFormat("en-GB", { hour: "numeric", minute: "2-digit", hour12: true, timeZone: "Europe/London" }).format(new Date(value)).replace(":00", "").replace(/\s/g, "").toLowerCase();
+  return `${date}, ${time(slot.start)}${slot.end ? `–${time(slot.end)}` : ""}`;
 }
 
 function Stat({ value, label }: { value: number; label: string }) {

@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { ArrowRight, Check, Clock3 } from "lucide-react";
+import { ArrowRight, CalendarPlus2, Check, Clock3, Trash2 } from "lucide-react";
 import type { EventInterestOption } from "@/data/events";
 import { submitEventInterest } from "@/lib/cms/server";
 
@@ -8,10 +8,14 @@ type Attendance = "yes" | "maybe" | "no";
 type Fields = {
   attendance: Attendance;
   availability: string[];
-  comment: string;
+  suggestedSlots: SuggestedSlotDraft[];
   email: string;
   website: string;
 };
+
+type SuggestedSlotDraft = { date: string; startTime: string; endTime: string };
+
+const emptySuggestion = (): SuggestedSlotDraft => ({ date: "", startTime: "", endTime: "" });
 
 export function EventInterestForm({
   eventSlug,
@@ -26,7 +30,7 @@ export function EventInterestForm({
   const [fields, setFields] = useState<Fields>({
     attendance: "yes",
     availability: [],
-    comment: "",
+    suggestedSlots: [],
     email: "",
     website: "",
   });
@@ -42,6 +46,7 @@ export function EventInterestForm({
       ...current,
       attendance,
       availability: attendance === "no" ? [] : current.availability,
+      suggestedSlots: attendance === "no" ? [] : current.suggestedSlots,
     }));
     if (status === "error") setStatus("idle");
   };
@@ -56,10 +61,27 @@ export function EventInterestForm({
     if (status === "error") setStatus("idle");
   };
 
-  const change = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const change = (event: React.ChangeEvent<HTMLInputElement>) => {
     setFields((current) => ({ ...current, [event.target.name]: event.target.value }));
     if (status === "error") setStatus("idle");
   };
+
+  const updateSuggestion = (index: number, field: keyof SuggestedSlotDraft, value: string) => {
+    setFields((current) => ({
+      ...current,
+      suggestedSlots: current.suggestedSlots.map((slot, slotIndex) =>
+        slotIndex === index ? { ...slot, [field]: value } : slot,
+      ),
+    }));
+    if (status === "error") setStatus("idle");
+  };
+
+  const suggestedSlots = fields.suggestedSlots
+    .filter((slot) => slot.date && slot.startTime)
+    .map((slot) => ({
+      start: new Date(`${slot.date}T${slot.startTime}`).toISOString(),
+      ...(slot.endTime ? { end: new Date(`${slot.date}T${slot.endTime}`).toISOString() } : {}),
+    }));
 
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -71,7 +93,7 @@ export function EventInterestForm({
           eventSlug,
           attendance: fields.attendance,
           availability: fields.availability,
-          comment: fields.comment,
+          suggestedSlots,
           email: fields.email,
           website: fields.website,
         },
@@ -171,23 +193,35 @@ export function EventInterestForm({
                   })}
                 </div>
               ) : (
-                <p className="mt-4 border border-forest/15 bg-cream px-4 py-3 text-sm text-forest/65">Date options are being added. You can still tell us you’re interested and leave a note below.</p>
+                <p className="mt-4 border border-forest/15 bg-cream px-4 py-3 text-sm text-forest/65">Date options are being added. You can still tell us you’re interested and suggest a time below.</p>
               )}
             </fieldset>
           ) : null}
 
-          <label className="grid gap-2 text-sm font-bold text-forest">
-            <span className="font-display text-xl">Anything you’d like us to include? <span className="font-body text-sm font-normal text-forest/50">(optional)</span></span>
-            <textarea
-              name="comment"
-              value={fields.comment}
-              onChange={change}
-              maxLength={1200}
-              rows={4}
-              placeholder="A stop on the walk, accessibility needs, something that would make you more likely to come…"
-              className="resize-y border-2 border-forest/25 bg-cream px-4 py-4 font-normal leading-relaxed text-forest outline-none placeholder:text-forest/35 focus:border-coral"
-            />
-          </label>
+          {fields.attendance !== "no" ? (
+            <fieldset className="border-t-2 border-forest/15 pt-7">
+              <legend className="font-display text-xl font-semibold text-forest">None of these work? Suggest another time</legend>
+              <p className="mt-1 text-sm text-forest/55">Share up to five times that would suit you. These stay separate until an organiser adds one to the poll.</p>
+              <div className="mt-4 grid gap-4">
+                {fields.suggestedSlots.map((slot, index) => (
+                  <div key={index} className="border-2 border-forest/20 bg-cream p-4">
+                    <div className="flex items-center justify-between gap-4">
+                      <p className="font-bold text-forest">Suggested time {index + 1}</p>
+                      <button type="button" onClick={() => setFields((current) => ({ ...current, suggestedSlots: current.suggestedSlots.filter((_, slotIndex) => slotIndex !== index) }))} className="inline-flex min-h-10 items-center gap-2 text-sm font-bold text-coral hover:text-forest">
+                        <Trash2 size={16} aria-hidden="true" /> Remove
+                      </button>
+                    </div>
+                    <div className="mt-3 grid gap-3 sm:grid-cols-3">
+                      <label className="grid gap-1 text-sm font-semibold text-forest">Date<input type="date" value={slot.date} min={new Date().toISOString().slice(0, 10)} onChange={(event) => updateSuggestion(index, "date", event.target.value)} className="min-h-11 border-2 border-forest/25 bg-paper px-3 font-normal outline-none focus:border-coral" required /></label>
+                      <label className="grid gap-1 text-sm font-semibold text-forest">Start time<input type="time" value={slot.startTime} onChange={(event) => updateSuggestion(index, "startTime", event.target.value)} className="min-h-11 border-2 border-forest/25 bg-paper px-3 font-normal outline-none focus:border-coral" required /></label>
+                      <label className="grid gap-1 text-sm font-semibold text-forest">End time <span className="font-normal text-forest/50">(optional)</span><input type="time" value={slot.endTime} onChange={(event) => updateSuggestion(index, "endTime", event.target.value)} className="min-h-11 border-2 border-forest/25 bg-paper px-3 font-normal outline-none focus:border-coral" /></label>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              {fields.suggestedSlots.length < 5 ? <button type="button" onClick={() => setFields((current) => ({ ...current, suggestedSlots: [...current.suggestedSlots, emptySuggestion()] }))} className="mt-4 inline-flex min-h-11 items-center gap-2 border-2 border-forest px-4 py-2 text-sm font-bold text-forest hover:bg-forest hover:text-cream"><CalendarPlus2 size={17} aria-hidden="true" /> Add another date/time</button> : null}
+            </fieldset>
+          ) : null}
 
           <label className="grid gap-2 border-t border-forest/15 pt-6 text-sm font-semibold text-forest">
             <span>Email me when the date is confirmed <span className="font-normal text-forest/50">(optional)</span></span>
