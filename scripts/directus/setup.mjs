@@ -629,12 +629,15 @@ for (const collection of ["member_highlights", "community_actions"]) {
   }
 }
 
-async function resolveNamedPolicy(environmentKey, expectedNames) {
+async function resolveNamedPolicy(environmentKey, expectedNames, { required = true } = {}) {
   const policies = await api(apiPath("/policies", { limit: -1, fields: "id,name,admin_access,app_access" }));
   const configuredId = process.env[environmentKey];
   const matches = configuredId
     ? policies.filter((policy) => policy.id === configuredId)
     : policies.filter((policy) => expectedNames.includes(policy.name));
+
+  if (!configuredId && !required && matches.length === 0) return null;
+
   if (matches.length !== 1)
     throw new Error(`${environmentKey} must identify exactly one existing least-privilege policy (accepted names: ${expectedNames.join(", ")}). Found ${matches.length}.`);
   if (matches[0].admin_access)
@@ -642,12 +645,19 @@ async function resolveNamedPolicy(environmentKey, expectedNames) {
   return matches[0];
 }
 
-// Policy assignment remains environment-specific. When enabled, setup fails closed
-// unless both existing non-admin policies resolve unambiguously.
+// Policy assignment remains environment-specific. When enabled, the runtime
+// service and editor policies must resolve unambiguously. The separate private
+// Check-In reviewer policy is optional here because cms:setup also provisions
+// unrelated features such as event planning; check-in moderation has its own
+// stricter setup command when that reviewer workflow is enabled.
 if (process.env.DIRECTUS_CONFIGURE_COMMUNITY_POLICIES === "true") {
   const servicePolicy = await resolveNamedPolicy("DIRECTUS_SERVICE_POLICY_ID", ["BrightFutures Website Service", "BrightFutures Server", "BrightFutures Community Service"]);
   const editorPolicy = await resolveNamedPolicy("DIRECTUS_EDITOR_POLICY_ID", ["BrightFutures Editors", "Committee Editor", "BrightFutures Community Editor"]);
-  const privateCheckinPolicy = await resolveNamedPolicy("DIRECTUS_PRIVATE_CHECKIN_POLICY_ID", ["BrightFutures Private Check-In Reviewers"]);
+  const privateCheckinPolicy = await resolveNamedPolicy(
+    "DIRECTUS_PRIVATE_CHECKIN_POLICY_ID",
+    ["BrightFutures Private Check-In Reviewers"],
+    { required: false },
+  );
   await upsertPermission(servicePolicy.id, "community_checkins", "create", {}, [
     "term", "highlight", "proud_of", "goal_or_challenge", "brightfutures_idea", "issue_to_raise",
     "name", "email", "share_publicly", "public_name_preference", "public_excerpt",
@@ -686,10 +696,16 @@ if (process.env.DIRECTUS_CONFIGURE_COMMUNITY_POLICIES === "true") {
     for (const permission of existing)
       await api(`/permissions/${permission.id}`, { method: "DELETE" });
   }
-  await upsertPermission(privateCheckinPolicy.id, "community_checkins", "read", {});
-  await upsertPermission(privateCheckinPolicy.id, "community_checkins", "update", {});
-  await upsertPermission(privateCheckinPolicy.id, "member_highlights", "create", {});
-  await upsertPermission(privateCheckinPolicy.id, "member_highlights", "read", {});
+  if (privateCheckinPolicy) {
+    await upsertPermission(privateCheckinPolicy.id, "community_checkins", "read", {});
+    await upsertPermission(privateCheckinPolicy.id, "community_checkins", "update", {});
+    await upsertPermission(privateCheckinPolicy.id, "member_highlights", "create", {});
+    await upsertPermission(privateCheckinPolicy.id, "member_highlights", "read", {});
+  } else {
+    console.warn(
+      "BrightFutures Private Check-In Reviewers policy not found; skipping reviewer-only Check-In permissions during cms:setup.",
+    );
+  }
   for (const collection of ["member_highlights", "community_actions"])
     for (const action of ["create", "read", "update", "delete"])
       await upsertPermission(editorPolicy.id, collection, action, {});
