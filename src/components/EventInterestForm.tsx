@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { ArrowRight, CalendarPlus2, Check, Clock3, Trash2 } from "lucide-react";
+import { ArrowRight, CalendarPlus2, Clock3, Trash2 } from "lucide-react";
 import type { EventInterestOption } from "@/data/events";
 import { submitEventInterest } from "@/lib/cms/server";
 
@@ -36,7 +36,6 @@ export function EventInterestForm({
   });
   const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
   const [errorMessage, setErrorMessage] = useState("");
-  const [updated, setUpdated] = useState(false);
   const closed = useMemo(
     () => !!closesAt && Number.isFinite(Date.parse(closesAt)) && Date.parse(closesAt) <= Date.now(),
     [closesAt],
@@ -103,8 +102,8 @@ export function EventInterestForm({
           website: fields.website,
         },
       });
-      setUpdated(!!result.updated);
-      setStatus("sent");
+      void result;
+      window.location.assign(`${window.location.pathname}#interest-check`);
     } catch (reason) {
       setErrorMessage(reason instanceof Error && reason.message ? reason.message : "We couldn’t save that response. Your choices are still here, so please try again.");
       setStatus("error");
@@ -120,22 +119,6 @@ export function EventInterestForm({
       </section>
     );
 
-  if (status === "sent")
-    return (
-      <section role="status" className="border-2 border-green bg-paper px-6 py-8 text-forest">
-        <div className="flex size-11 items-center justify-center rounded-full bg-green text-forest"><Check size={22} /></div>
-        <h2 className="mt-4 font-display text-3xl">Got it. Thanks.</h2>
-        <p className="mt-2 max-w-xl text-forest/70">
-          {updated
-            ? "We’ve updated your previous response, so you won’t be counted twice."
-            : "Your availability has been added to the interest check."}
-        </p>
-        <button type="button" onClick={() => setStatus("idle")} className="mt-5 border-b-2 border-forest pb-1 text-sm font-bold text-forest hover:text-coral">
-          Change my response
-        </button>
-      </section>
-    );
-
   const attendanceOptions: Array<{ value: Attendance; label: string; detail: string }> = [
     { value: "yes", label: "Yes", detail: "I’d be up for it" },
     { value: "maybe", label: "Maybe", detail: "Depends on the date" },
@@ -143,7 +126,7 @@ export function EventInterestForm({
   ];
 
   return (
-    <section className="relative overflow-hidden border-2 border-forest bg-paper px-5 py-7 sm:px-7 sm:py-8">
+    <section id="interest-check" className="relative scroll-mt-24 overflow-hidden border-2 border-forest bg-paper px-5 py-7 sm:px-7 sm:py-8">
       <div className="pointer-events-none absolute -right-12 -top-16 size-40 rounded-full border-[22px] border-green/30" aria-hidden="true" />
       <div className="relative">
         <p className="text-xs font-extrabold uppercase tracking-[.16em] text-coral">Help choose the date</p>
