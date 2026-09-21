@@ -109,7 +109,7 @@ export function toEvent(event: CmsEvent): Event {
     startDate: event.start_date || undefined,
     endDate: event.end_date || undefined,
     time: event.time_display || undefined,
-    interestOptions: Array.isArray(event.interest_options) ? event.interest_options : undefined,
+    interestOptions: normaliseInterestOptions(event.interest_options),
     interestClosesAt: event.interest_closes_at || undefined,
     location: event.location || undefined,
     category: categoryLabels[event.category],
