@@ -109,7 +109,7 @@ export function toEvent(event: CmsEvent): Event {
     startDate: event.start_date || undefined,
     endDate: event.end_date || undefined,
     time: event.time_display || undefined,
-    interestOptions: Array.isArray(event.interest_options) ? event.interest_options : undefined,
+    interestOptions: normaliseInterestOptions(event.interest_options),
     interestClosesAt: event.interest_closes_at || undefined,
     location: event.location || undefined,
     category: categoryLabels[event.category],
@@ -276,10 +276,11 @@ function normaliseInterestOptions(value: unknown): EventInterestOption[] {
     const label = customLabel || friendlyPollLabel(start!, end);
     const existingId =
       typeof option.id === "string" ? option.id.trim().slice(0, 100) : "";
-    const generatedId = `slot-${createHash("sha256")
-      .update(start ? `${start}|${end || ""}` : label)
-      .digest("hex")
-      .slice(0, 16)}`;
+    const generatedId = `slot-${(start ? `${start}-${end || ""}` : label)
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-|-$/g, "")
+      .slice(0, 90)}`;
 
     options.push({
       id: existingId || generatedId,
