@@ -92,15 +92,43 @@ The older job-application record is archived because the graduate careers route
 uses the same official page and covers that purpose more clearly.
 Override `RESOURCE_REVIEWED_ON` or `RESOURCE_REVIEW_DUE` after a later review.
 
-## Event publication and freshness
+## Event publication, interest checks and freshness
 
-Event publication is controlled by `status`: **Confirmed** events are public and
-**Completed** events remain in the public archive. Draft, Provisional and
-Cancelled events are private. `published_at` is a legacy field and is not part of
-the event visibility rule. The events listing, homepage and event detail routes
-all use the same runtime Directus loaders. Listings have a 15-second in-process
-cache; details are uncached. No build or process restart is needed after ordinary
-event edits.
+Event publication is controlled by `status`. **Interest Check**, **Confirmed**
+and **Completed** events are public. Draft, Provisional and Cancelled events are
+private. `published_at` is a legacy field and is not part of the event visibility
+rule.
+
+Interest Check events may have a null `start_date`. Configure
+`interest_options` as a JSON array of stable objects such as:
+
+```json
+[
+  {
+    "id": "sat-1400",
+    "label": "Saturday 3 October, 2–4pm",
+    "start": "2026-10-03T14:00:00+01:00",
+    "end": "2026-10-03T16:00:00+01:00"
+  }
+]
+```
+
+Member responses are stored privately in `event_interest_responses`; the public
+Directus policy receives no access to that collection. The website service policy
+needs create/read/update access to that private collection so repeat responses can
+replace an earlier response from the same one-way connection hash. It also receives
+a narrowly filtered event update permission for Interest Check records so the
+private organiser dashboard can confirm a selected slot.
+
+The organiser dashboard is available at `/admin/event-interest`. Set
+`EVENT_INTEREST_ADMIN_TOKEN` for its passcode, or it will fall back to
+`ART_WALL_ADMIN_TOKEN` when that existing moderation passcode is configured.
+Confirming a slot copies its start/end into the event, generates the time display
+and changes the event status to Confirmed.
+
+The events listing, homepage and event detail routes all use the same runtime
+Directus loaders. Listings have a 15-second in-process cache; details are uncached.
+No build or process restart is needed after ordinary event edits.
 
 ## Community Check-In policies
 
