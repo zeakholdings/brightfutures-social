@@ -404,6 +404,64 @@ export const getEventInterestAdmin = createServerFn({ method: "POST" })
       };
     });
   });
+export const confirmEventInterestOption = createServerFn({ method: "POST" })
+  .validator(
+    z.object({
+      token: z.string().min(1).max(500),
+      eventSlug: z.string().min(1).max(160),
+      optionId: z.string().min(1).max(100),
+    }),
+  )
+  .handler(async ({ data }) => {
+    const expected = interestAdminToken();
+    if (!expected || data.token !== expected)
+      throw new Error("That organiser passcode was not recognised.");
+
+    const client = privateClient();
+    const rows = (await client.request(
+      readItems("events", {
+        filter: {
+          _and: [
+            { slug: { _eq: data.eventSlug } },
+            { status: { _eq: "interest-check" } },
+          ],
+        },
+        fields: ["id", "interest_options"],
+        limit: 1,
+      }),
+    )) as Array<{ id: string | number; interest_options?: unknown }>;
+
+    const event = rows[0];
+    if (!event) throw new Error("That interest check is no longer open.");
+    const option = normaliseInterestOptions(event.interest_options).find(
+      (item) => item.id === data.optionId,
+    );
+    if (!option?.start || !Number.isFinite(Date.parse(option.start)))
+      throw new Error("That option does not have a valid start date.");
+
+    const formatTime = (value: string) =>
+      new Intl.DateTimeFormat("en-GB", {
+        hour: "numeric",
+        minute: "2-digit",
+        timeZone: "Europe/London",
+      }).format(new Date(value));
+    const timeDisplay =
+      option.end && Number.isFinite(Date.parse(option.end))
+        ? `${formatTime(option.start)}–${formatTime(option.end)}`
+        : formatTime(option.start);
+
+    await client.request(
+      updateItem("events", event.id, {
+        start_date: option.start,
+        end_date: option.end || null,
+        time_display: timeDisplay,
+        status: "confirmed",
+      }),
+    );
+    cache.delete("events");
+    return { ok: true as const };
+  });
+
 const withPostAsset = (post: Post) => ({
   ...post,
   featured_image: assetUrl(post.featured_image) || null,
