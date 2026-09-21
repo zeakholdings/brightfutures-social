@@ -276,10 +276,11 @@ function normaliseInterestOptions(value: unknown): EventInterestOption[] {
     const label = customLabel || friendlyPollLabel(start!, end);
     const existingId =
       typeof option.id === "string" ? option.id.trim().slice(0, 100) : "";
-    const generatedId = `slot-${createHash("sha256")
-      .update(start ? `${start}|${end || ""}` : label)
-      .digest("hex")
-      .slice(0, 16)}`;
+    const generatedId = `slot-${(start ? `${start}-${end || ""}` : label)
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-|-$/g, "")
+      .slice(0, 90)}`;
 
     options.push({
       id: existingId || generatedId,
