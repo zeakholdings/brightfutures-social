@@ -357,7 +357,13 @@ export const getEventInterestAdmin = createServerFn({ method: "POST" })
       >,
     ]);
 
-    return events.map((event) => {
+    return events
+      .filter(
+        (event) =>
+          event.status === "interest-check" ||
+          normaliseInterestOptions(event.interest_options).length > 0,
+      )
+      .map((event) => {
       const options = normaliseInterestOptions(event.interest_options);
       const rows = responses.filter((row) => row.event_slug === event.slug);
       const selected = (row: (typeof rows)[number]) =>
