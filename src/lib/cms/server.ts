@@ -330,7 +330,9 @@ export const submitEventInterest = createServerFn({ method: "POST" })
       event_slug: data.eventSlug,
       attendance: data.attendance,
       availability: data.attendance === "no" ? [] : data.availability,
-      suggested_slots: suggestedSlots,
+      // Keep ordinary poll responses working while an older CMS deployment is
+      // being migrated to the structured suggested_slots field.
+      ...(suggestedSlots.length ? { suggested_slots: suggestedSlots } : {}),
       email: data.email || null,
       ...info,
     };
