@@ -311,6 +311,10 @@ const collections = {
         interface: "tags",
         note: "Selected option IDs from the event's interest_options field.",
       }),
+      field("suggested_slots", "json", {}, {
+        interface: "list",
+        note: "Structured member-suggested date/time slots. These are private and are not poll options until an organiser adds one.",
+      }),
       field("comment", "text"),
       field("email", "string", {}, {
         note: "Optional. Used only if the member asks to hear when the date is confirmed.",
@@ -664,7 +668,7 @@ if (process.env.DIRECTUS_CONFIGURE_COMMUNITY_POLICIES === "true") {
     "website_consent", "social_media_consent", "consent_recorded_at",
   ]);
   const interestResponseFields = [
-    "event_slug", "attendance", "availability", "comment", "email", "ip_hash", "user_agent",
+    "event_slug", "attendance", "availability", "suggested_slots", "comment", "email", "ip_hash", "user_agent",
   ];
   await upsertPermission(
     servicePolicy.id,
@@ -680,7 +684,7 @@ if (process.env.DIRECTUS_CONFIGURE_COMMUNITY_POLICIES === "true") {
     "events",
     "update",
     { status: { _eq: "interest-check" } },
-    ["start_date", "end_date", "time_display", "status"],
+    ["start_date", "end_date", "time_display", "status", "interest_options"],
   );
   // Runtime CMS reads use this server-only token. Mirror only the already-safe
   // public projection for editorial collections added after the original

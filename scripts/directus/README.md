@@ -109,7 +109,11 @@ not have to manage technical identifiers. Reordering poll choices does not chang
 their IDs.
 
 Member responses are stored privately in `event_interest_responses`; the public
-Directus policy receives no access to that collection. The website service policy
+Directus policy receives no access to that collection. Alongside their Yes/Maybe
+response, members can submit up to five structured `suggested_slots` (`start` and
+optional `end`) when the official choices do not work. These are never made public
+poll choices automatically; the organiser dashboard groups close suggestions and
+can explicitly add one to the poll. The website service policy
 needs create/read/update access to that private collection so repeat responses can
 replace an earlier response from the same one-way connection hash. It also receives
 a narrowly filtered event update permission for Interest Check records so the

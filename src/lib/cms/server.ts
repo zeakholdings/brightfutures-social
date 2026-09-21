@@ -179,25 +179,34 @@ export async function getEvent(options: {
   return getEventServer(options);
 }
 
-const eventInterestText = (maximum: number) =>
-  z
-    .string()
-    .max(maximum)
-    .transform((value) =>
-      value
-        .normalize("NFKC")
-        .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, "")
-        .trim(),
-    );
-
 const eventInterestInput = z.object({
   eventSlug: z.string().min(1).max(160),
   attendance: z.enum(["yes", "maybe", "no"]),
   availability: z.array(z.string().min(1).max(100)).max(20),
-  comment: eventInterestText(1200),
+  suggestedSlots: z.array(z.object({ start: z.string().datetime(), end: z.string().datetime().optional() })).max(5),
   email: z.union([z.literal(""), z.string().trim().email().max(254)]),
   website: z.string().max(0),
 });
+
+type SuggestedSlot = { start: string; end?: string };
+
+function normaliseSuggestedSlots(value: SuggestedSlot[]) {
+  const now = Date.now();
+  const unique = new Set<string>();
+  return value.map((slot) => {
+    const start = new Date(slot.start);
+    const end = slot.end ? new Date(slot.end) : undefined;
+    if (!Number.isFinite(start.getTime()) || start.getTime() <= now)
+      throw new Error("Suggested times need to be in the future.");
+    if (end && (!Number.isFinite(end.getTime()) || end <= start))
+      throw new Error("A suggested end time must be after its start time.");
+    const normalised = { start: start.toISOString(), ...(end ? { end: end.toISOString() } : {}) };
+    const key = `${normalised.start}|${normalised.end || ""}`;
+    if (unique.has(key)) throw new Error("Please remove duplicate suggested times.");
+    unique.add(key);
+    return normalised;
+  });
+}
 
 function friendlyPollTime(value: string) {
   return new Intl.DateTimeFormat("en-GB", {
@@ -299,6 +308,7 @@ export const submitEventInterest = createServerFn({ method: "POST" })
     const allowed = new Set(options.map((option) => option.id));
     if (data.availability.some((id) => !allowed.has(id)))
       throw new Error("One of the selected times is no longer available.");
+    const suggestedSlots = data.attendance === "no" ? [] : normaliseSuggestedSlots(data.suggestedSlots);
 
     const info = requestInfo(`event-interest:${data.eventSlug}`);
     const client = privateClient();
@@ -319,7 +329,7 @@ export const submitEventInterest = createServerFn({ method: "POST" })
       event_slug: data.eventSlug,
       attendance: data.attendance,
       availability: data.attendance === "no" ? [] : data.availability,
-      comment: data.comment || null,
+      suggested_slots: suggestedSlots,
       email: data.email || null,
       ...info,
     };
@@ -350,11 +360,12 @@ export interface EventInterestAdminSummary {
     available: number;
   }>;
   bestOptionId: string | null;
+  suggestedSlots: Array<{ start: string; end?: string; count: number }>;
   recent: Array<{
     id: string;
     attendance: "yes" | "maybe" | "no";
     availability: string[];
-    comment: string | null;
+    suggestedSlots: Array<{ start: string; end?: string }>;
     email: string | null;
     createdAt: string | null;
   }>;
@@ -400,7 +411,7 @@ export const getEventInterestAdmin = createServerFn({ method: "POST" })
             "event_slug",
             "attendance",
             "availability",
-            "comment",
+            "suggested_slots",
             "email",
             "date_created",
           ],
@@ -413,7 +424,7 @@ export const getEventInterestAdmin = createServerFn({ method: "POST" })
           event_slug: string;
           attendance: "yes" | "maybe" | "no";
           availability?: unknown;
-          comment?: string | null;
+          suggested_slots?: unknown;
           email?: string | null;
           date_created?: string | null;
         }>
@@ -447,6 +458,22 @@ export const getEventInterestAdmin = createServerFn({ method: "POST" })
       const ranked = [...optionStats].sort(
         (a, b) => b.yes * 2 + b.maybe - (a.yes * 2 + a.maybe),
       );
+      const groupedSuggestions = new Map<string, { start: string; end?: string; count: number }>();
+      for (const row of rows) {
+        if (!Array.isArray(row.suggested_slots)) continue;
+        for (const raw of row.suggested_slots) {
+          if (!raw || typeof raw !== "object") continue;
+          const slot = raw as { start?: unknown; end?: unknown };
+          if (typeof slot.start !== "string" || !Number.isFinite(Date.parse(slot.start))) continue;
+          const end = typeof slot.end === "string" && Number.isFinite(Date.parse(slot.end)) ? slot.end : undefined;
+          // Round to 30 minutes so close suggestions are useful together.
+          const roundedStart = new Date(Math.round(Date.parse(slot.start) / 1_800_000) * 1_800_000).toISOString();
+          const roundedEnd = end ? new Date(Math.round(Date.parse(end) / 1_800_000) * 1_800_000).toISOString() : undefined;
+          const key = `${roundedStart}|${roundedEnd || ""}`;
+          const current = groupedSuggestions.get(key);
+          groupedSuggestions.set(key, current ? { ...current, count: current.count + 1 } : { start: roundedStart, ...(roundedEnd ? { end: roundedEnd } : {}), count: 1 });
+        }
+      }
 
       return {
         slug: event.slug,
@@ -462,11 +489,12 @@ export const getEventInterestAdmin = createServerFn({ method: "POST" })
         },
         options: optionStats,
         bestOptionId: ranked[0]?.id || null,
+        suggestedSlots: [...groupedSuggestions.values()].sort((a, b) => b.count - a.count),
         recent: rows.slice(0, 40).map((row) => ({
           id: String(row.id),
           attendance: row.attendance,
           availability: selected(row),
-          comment: row.comment || null,
+          suggestedSlots: Array.isArray(row.suggested_slots) ? row.suggested_slots.filter((slot): slot is { start: string; end?: string } => !!slot && typeof slot === "object" && typeof (slot as { start?: unknown }).start === "string") : [],
           email: row.email || null,
           createdAt: row.date_created || null,
         })),
@@ -529,6 +557,38 @@ export const confirmEventInterestOption = createServerFn({ method: "POST" })
     );
     cache.delete("events");
     return { ok: true as const };
+  });
+
+export const addSuggestedEventInterestOption = createServerFn({ method: "POST" })
+  .validator(z.object({
+    token: z.string().min(1).max(500),
+    eventSlug: z.string().min(1).max(160),
+    start: z.string().datetime(),
+    end: z.string().datetime().optional(),
+  }))
+  .handler(async ({ data }) => {
+    const expected = interestAdminToken();
+    if (!expected || data.token !== expected)
+      throw new Error("That organiser passcode was not recognised.");
+    const [slot] = normaliseSuggestedSlots([{ start: data.start, ...(data.end ? { end: data.end } : {}) }]);
+    const client = privateClient();
+    const rows = (await client.request(readItems("events", {
+      filter: { _and: [{ slug: { _eq: data.eventSlug } }, { status: { _eq: "interest-check" } }] },
+      fields: ["id", "interest_options"], limit: 1,
+    }))) as Array<{ id: string | number; interest_options?: unknown }>;
+    const event = rows[0];
+    if (!event) throw new Error("That interest check is no longer open.");
+    const options = normaliseInterestOptions(event.interest_options);
+    if (options.some((option) => option.start === slot.start && (option.end || undefined) === slot.end))
+      return { ok: true as const, alreadyAdded: true as const };
+    await client.request(updateItem("events", event.id, {
+      interest_options: [...options, {
+        id: `slot-${createHash("sha256").update(`${slot.start}|${slot.end || ""}`).digest("hex").slice(0, 16)}`,
+        label: friendlyPollLabel(slot.start, slot.end), ...slot,
+      }],
+    }));
+    cache.delete("events");
+    return { ok: true as const, alreadyAdded: false as const };
   });
 
 const withPostAsset = (post: Post) => ({
