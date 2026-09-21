@@ -67,6 +67,8 @@ function EventsPage() {
         ),
     [events, active, year],
   );
+  const planning = upcoming.filter((event) => event.status === "interest-check");
+  const confirmedUpcoming = upcoming.filter((event) => event.status !== "interest-check");
   return (
     <div>
       <PageHero
@@ -108,16 +110,28 @@ function EventsPage() {
               </select>
             </label>
           </div>
-          <h2 className="mt-12 font-display text-4xl text-forest">Upcoming</h2>
-          {upcoming.length ? (
+          {planning.length ? (
+            <div className="mt-12 border-2 border-forest bg-paper px-5 py-7 sm:px-7">
+              <p className="text-xs font-extrabold uppercase tracking-[.16em] text-coral">Help shape what’s next</p>
+              <h2 className="mt-2 font-display text-4xl text-forest">Choose a date that actually works.</h2>
+              <p className="mt-3 max-w-2xl text-forest/65">These events are still being planned. Tell us if you’d come and tick the times you can make before we book anything.</p>
+              <div className="mt-5">
+                {planning.map((e) => (
+                  <EventCard key={e.slug} event={e} compact />
+                ))}
+              </div>
+            </div>
+          ) : null}
+          <h2 className="mt-12 font-display text-4xl text-forest">{planning.length ? "Confirmed events" : "Upcoming"}</h2>
+          {confirmedUpcoming.length ? (
             <div className="mt-5">
-              {upcoming.map((e) => (
+              {confirmedUpcoming.map((e) => (
                 <EventCard key={e.slug} event={e} compact />
               ))}
             </div>
           ) : (
             <p className="mt-6 text-forest/60">
-              Nothing in this category is scheduled yet.
+              {planning.length ? "No confirmed events in this category yet." : "Nothing in this category is scheduled yet."}
             </p>
           )}
         </div>
