@@ -100,17 +100,24 @@ await patchField("member_highlights", "website_consent_confirmed", { readonly: t
 await patchField("member_highlights", "social_consent_confirmed", { readonly: true, note: "If No, do not use this highlight on social media." });
 await patchField("member_highlights", "consent_confirmed_at", { readonly: true, note: "When the draft workflow confirmed the source consent." });
 await patchField("events", "status", {
-  note: "Publication control: Confirmed and Completed events are public. Draft, Provisional and Cancelled events are not shown on the website.",
+  note: "Publication control: Interest Check, Confirmed and Completed events are public. Draft, Provisional and Cancelled events are not shown on the website.",
   display: "labels",
   options: {
     choices: [
       { text: "Draft (not public)", value: "draft", color: "#6B7280" },
       { text: "Provisional (not public)", value: "provisional", color: "#D97706" },
+      { text: "Interest Check (public)", value: "interest-check", color: "#E76F51" },
       { text: "Confirmed (public)", value: "confirmed", color: "#059669" },
       { text: "Cancelled (not public)", value: "cancelled", color: "#DC2626" },
       { text: "Completed (public archive)", value: "completed", color: "#2563EB" },
     ],
   },
+});
+await patchField("events", "interest_options", {
+  note: "Interest Check only. Add JSON such as [{\"id\":\"sat-1400\",\"label\":\"Saturday 3 October, 2–4pm\",\"start\":\"2026-10-03T14:00:00+01:00\",\"end\":\"2026-10-03T16:00:00+01:00\"}]. Keep IDs stable while voting is open.",
+});
+await patchField("events", "interest_closes_at", {
+  note: "Optional. The public form closes automatically after this date/time.",
 });
 await patchField("events", "published_at", {
   hidden: true,
