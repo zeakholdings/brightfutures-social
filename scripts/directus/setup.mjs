@@ -624,6 +624,13 @@ if (process.env.DIRECTUS_CONFIGURE_COMMUNITY_POLICIES === "true") {
   await upsertPermission(servicePolicy.id, "event_interest_responses", "create", {}, interestResponseFields);
   await upsertPermission(servicePolicy.id, "event_interest_responses", "read", {}, ["id", ...interestResponseFields, "date_created", "date_updated"]);
   await upsertPermission(servicePolicy.id, "event_interest_responses", "update", {}, interestResponseFields);
+  await upsertPermission(
+    servicePolicy.id,
+    "events",
+    "update",
+    { status: { _eq: "interest-check" } },
+    ["start_date", "end_date", "time_display", "status"],
+  );
   // Runtime CMS reads use this server-only token. Mirror only the already-safe
   // public projection for editorial collections added after the original
   // service policy was created; never grant check-in reads.
