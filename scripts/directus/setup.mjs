@@ -306,6 +306,9 @@ const collections = {
   event_interest_responses: {
     fields: [
       field("event_slug", "string", { is_nullable: false }),
+      field("respondent_id", "string", {}, {
+        note: "Anonymous browser-generated UUID. Used with event_slug to let that browser update its own response; legacy records may be blank.",
+      }),
       select("attendance", ["yes", "maybe", "no"], "yes"),
       field("availability", "json", {}, {
         interface: "tags",
@@ -344,7 +347,7 @@ const collections = {
         note: "Optional. Used only if the member asks to hear when the date is confirmed.",
       }),
       field("ip_hash", "string", {}, {
-        note: "One-way server-side hash used to replace repeat responses from the same connection rather than double-counting them.",
+        note: "One-way server-side hash retained only for abuse prevention and rate limiting. It is not a respondent identifier.",
       }),
       field("user_agent", "text"),
       field("date_created", "timestamp", {}, { special: ["date-created"], readonly: true }),
@@ -692,7 +695,7 @@ if (process.env.DIRECTUS_CONFIGURE_COMMUNITY_POLICIES === "true") {
     "website_consent", "social_media_consent", "consent_recorded_at",
   ]);
   const interestResponseFields = [
-    "event_slug", "attendance", "availability", "suggested_slots", "comment", "email", "ip_hash", "user_agent",
+    "event_slug", "respondent_id", "attendance", "availability", "suggested_slots", "comment", "email", "ip_hash", "user_agent",
   ];
   await upsertPermission(
     servicePolicy.id,

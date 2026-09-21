@@ -181,6 +181,7 @@ export async function getEvent(options: {
 
 const eventInterestInput = z.object({
   eventSlug: z.string().min(1).max(160),
+  respondentId: z.string().uuid(),
   attendance: z.enum(["yes", "maybe", "no"]),
   availability: z.array(z.string().min(1).max(100)).max(20),
   suggestedSlots: z.array(z.object({ start: z.string().datetime(), end: z.string().datetime().optional() })).max(5),
@@ -318,7 +319,7 @@ export const submitEventInterest = createServerFn({ method: "POST" })
         filter: {
           _and: [
             { event_slug: { _eq: data.eventSlug } },
-            { ip_hash: { _eq: info.ip_hash } },
+            { respondent_id: { _eq: data.respondentId } },
           ],
         },
         fields: ["id"],
@@ -328,11 +329,12 @@ export const submitEventInterest = createServerFn({ method: "POST" })
 
     const payload = {
       event_slug: data.eventSlug,
+      respondent_id: data.respondentId,
       attendance: data.attendance,
       availability: data.attendance === "no" ? [] : data.availability,
-      // Keep ordinary poll responses working while an older CMS deployment is
-      // being migrated to the structured suggested_slots field.
-      ...(suggestedSlots.length ? { suggested_slots: suggestedSlots } : {}),
+      // Send an empty array explicitly when suggestions were removed, so an
+      // update cannot leave stale suggested times on the respondent's record.
+      suggested_slots: suggestedSlots,
       email: data.email || null,
       ...info,
     };

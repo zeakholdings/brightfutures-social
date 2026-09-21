@@ -17,6 +17,39 @@ type SuggestedSlotDraft = { date: string; startTime: string; endTime: string };
 
 const emptySuggestion = (): SuggestedSlotDraft => ({ date: "", startTime: "", endTime: "" });
 
+function respondentStorageKey(eventSlug: string) {
+  return `brightfutures:event-interest:${eventSlug}:respondent-id`;
+}
+
+function newRespondentId() {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function")
+    return crypto.randomUUID();
+  if (typeof crypto === "undefined" || typeof crypto.getRandomValues !== "function")
+    throw new Error("Your browser cannot create an anonymous response ID. Please try a current browser.");
+
+  const bytes = crypto.getRandomValues(new Uint8Array(16));
+  bytes[6] = (bytes[6] & 0x0f) | 0x40;
+  bytes[8] = (bytes[8] & 0x3f) | 0x80;
+  const hex = [...bytes].map((byte) => byte.toString(16).padStart(2, "0")).join("");
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
+}
+
+function respondentIdFor(eventSlug: string) {
+  const key = respondentStorageKey(eventSlug);
+  try {
+    const stored = window.localStorage.getItem(key);
+    if (stored && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(stored))
+      return stored;
+    const id = newRespondentId();
+    window.localStorage.setItem(key, id);
+    return id;
+  } catch {
+    // Storage can be disabled. The submission remains anonymous, but cannot be
+    // associated with a later edit from this browser.
+    return newRespondentId();
+  }
+}
+
 export function EventInterestForm({
   eventSlug,
   options,
@@ -98,6 +131,7 @@ export function EventInterestForm({
           attendance: fields.attendance,
           availability: fields.availability,
           suggestedSlots,
+          respondentId: respondentIdFor(eventSlug),
           email: fields.email,
           website: fields.website,
         },
@@ -231,7 +265,7 @@ export function EventInterestForm({
               {status === "sending" ? "Sending…" : "Send my availability"}
               {status !== "sending" ? <ArrowRight size={18} aria-hidden="true" /> : null}
             </button>
-            <p className="max-w-sm text-xs leading-relaxed text-forest/50">Submitting again from the same connection updates your response rather than counting you twice.</p>
+            <p className="max-w-sm text-xs leading-relaxed text-forest/50">Submitting again from this browser updates your response. Other people on the same Wi-Fi can respond separately.</p>
           </div>
           {status === "error" ? <p role="alert" className="border-l-4 border-coral pl-3 text-sm font-semibold text-coral">{errorMessage}</p> : null}
         </form>

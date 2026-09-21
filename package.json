@@ -8,6 +8,7 @@
     "start": "srvx --prod --port 6090 -s ../client dist/server/server.js",
     "typecheck": "tsc --noEmit",
     "cms:setup": "node scripts/directus/setup.mjs",
+    "cms:backfill:event-interest": "node scripts/directus/backfill-event-interest-responses.mjs --apply",
     "cms:moderation": "node scripts/directus/setup-moderation.mjs",
     "cms:posts-editor": "node scripts/directus/setup-posts-editor.mjs",
     "cms:art-wall": "node scripts/directus/setup-art-wall.mjs",

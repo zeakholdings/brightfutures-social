@@ -109,6 +109,8 @@ if (fieldPosts.some((posted) => forbiddenFields.includes(posted.field)))
 for (const collection of ["community_checkins", "member_highlights", "community_actions"])
   if (!fieldPosts.some((posted) => posted.collection === collection))
     throw new Error(`${collection} fields were not configured`);
+if (!fieldPosts.some((posted) => posted.collection === "event_interest_responses" && posted.field === "respondent_id"))
+  throw new Error("event_interest_responses is missing the anonymous respondent_id field");
 for (const collection of ["member_highlights", "community_actions"]) {
   const permission = permissionPosts.find((posted) => posted.collection === collection);
   if (!permission || !JSON.stringify(permission.permissions).includes('"published"'))

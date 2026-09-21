@@ -114,8 +114,11 @@ response, members can submit up to five structured `suggested_slots` (`start` an
 optional `end`) when the official choices do not work. These are never made public
 poll choices automatically; the organiser dashboard groups close suggestions and
 can explicitly add one to the poll. The website service policy
-needs create/read/update access to that private collection so repeat responses can
-replace an earlier response from the same one-way connection hash. It also receives
+needs create/read/update access to that private collection so repeat submissions
+from the same browser can replace that browser's earlier response. The browser keeps
+an anonymous random response ID locally; the server uses it with the event slug for
+this update and uses the one-way connection hash only for abuse prevention and rate
+limiting. It also receives
 a narrowly filtered event update permission for Interest Check records so the
 private organiser dashboard can confirm a selected slot.
 
