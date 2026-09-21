@@ -1,5 +1,5 @@
 export type CmsEventStatus =
-  "draft" | "provisional" | "confirmed" | "cancelled" | "completed";
+  "draft" | "provisional" | "interest-check" | "confirmed" | "cancelled" | "completed";
 export type CmsEventCategory =
   | "social"
   | "coffee-connect"
@@ -9,7 +9,7 @@ export type CmsEventCategory =
   | "wellbeing"
   | "trips"
   | "seasonal";
-export type { Event } from "@/data/events";
+export type { Event, EventInterestOption } from "@/data/events";
 
 export interface CmsEvent {
   id: string | number;
@@ -18,9 +18,11 @@ export interface CmsEvent {
   status: CmsEventStatus;
   academic_year: string;
   category: CmsEventCategory;
-  start_date: string;
+  start_date?: string | null;
   end_date?: string | null;
   time_display?: string | null;
+  interest_options?: import("@/data/events").EventInterestOption[] | null;
+  interest_closes_at?: string | null;
   location?: string | null;
   description?: string | null;
   body?: string | null;
