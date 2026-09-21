@@ -7,7 +7,7 @@ const collections = {
       field("slug", "string", { is_nullable: false, is_unique: true }),
       select(
         "status",
-        ["draft", "provisional", "confirmed", "cancelled", "completed"],
+        ["draft", "provisional", "interest-check", "confirmed", "cancelled", "completed"],
         "draft",
       ),
       field("academic_year", "string"),
@@ -21,9 +21,17 @@ const collections = {
         "trips",
         "seasonal",
       ]),
-      field("start_date", "timestamp", { is_nullable: false }),
+      field("start_date", "timestamp"),
       field("end_date", "timestamp"),
       field("time_display", "string"),
+      field("interest_options", "json", {}, {
+        interface: "input-code",
+        options: { language: "json", lineNumber: true },
+        note: "For Interest Check events only. JSON array of { id, label, start?, end? }. Keep each id stable while responses are open.",
+      }),
+      field("interest_closes_at", "timestamp", {}, {
+        note: "Optional closing time for availability responses. Leave blank to keep the interest check open.",
+      }),
       field("location", "string"),
       field("description", "text"),
       field("body", "text", {}, { interface: "input-rich-text-html" }),
@@ -260,6 +268,28 @@ const collections = {
     ],
     icon: "lightbulb",
   },
+  event_interest_responses: {
+    fields: [
+      field("event_slug", "string", { is_nullable: false }),
+      select("attendance", ["yes", "maybe", "no"], "yes"),
+      field("availability", "json", {}, {
+        interface: "tags",
+        note: "Selected option IDs from the event's interest_options field.",
+      }),
+      field("comment", "text"),
+      field("email", "string", {}, {
+        note: "Optional. Used only if the member asks to hear when the date is confirmed.",
+      }),
+      field("ip_hash", "string", {}, {
+        note: "One-way server-side hash used to replace repeat responses from the same connection rather than double-counting them.",
+      }),
+      field("user_agent", "text"),
+      field("date_created", "timestamp", {}, { special: ["date-created"], readonly: true }),
+      field("date_updated", "timestamp", {}, { special: ["date-updated"], readonly: true }),
+    ],
+    icon: "how_to_vote",
+    hidden: false,
+  },
   community_checkins: {
     fields: [
       select("status", ["new", "reviewed", "action_needed", "closed"], "new"),
@@ -432,7 +462,7 @@ for (const field of ["portrait_original", "portrait_stylised", "photo"]) {
 }
 
 const publicRules = [
-  ["events", "read", { status: { _in: ["confirmed", "completed"] } }],
+  ["events", "read", { status: { _in: ["interest-check", "confirmed", "completed"] } }],
   [
     "posts",
     "read",
@@ -549,7 +579,7 @@ async function upsertPermission(policy, collection, action, permissions, fields 
 const publicPolicy = await resolvePublicPolicy();
 for (const [collection, action, rule, fields] of publicRules)
   await upsertPermission(publicPolicy.id, collection, action, rule, fields);
-for (const collection of ["ideas", "contact_messages", "community_checkins"]) {
+for (const collection of ["ideas", "contact_messages", "community_checkins", "event_interest_responses"]) {
   for (const action of ["read", "create", "update", "delete", "share"]) {
     const existing = await findPermissions(publicPolicy.id, collection, action);
     for (const permission of existing)
@@ -588,6 +618,12 @@ if (process.env.DIRECTUS_CONFIGURE_COMMUNITY_POLICIES === "true") {
     "name", "email", "share_publicly", "public_name_preference", "public_excerpt",
     "website_consent", "social_media_consent", "consent_recorded_at",
   ]);
+  const interestResponseFields = [
+    "event_slug", "attendance", "availability", "comment", "email", "ip_hash", "user_agent",
+  ];
+  await upsertPermission(servicePolicy.id, "event_interest_responses", "create", {}, interestResponseFields);
+  await upsertPermission(servicePolicy.id, "event_interest_responses", "read", {}, ["id", ...interestResponseFields, "date_created", "date_updated"]);
+  await upsertPermission(servicePolicy.id, "event_interest_responses", "update", {}, interestResponseFields);
   // Runtime CMS reads use this server-only token. Mirror only the already-safe
   // public projection for editorial collections added after the original
   // service policy was created; never grant check-in reads.
@@ -609,6 +645,8 @@ if (process.env.DIRECTUS_CONFIGURE_COMMUNITY_POLICIES === "true") {
   for (const collection of ["member_highlights", "community_actions"])
     for (const action of ["create", "read", "update", "delete"])
       await upsertPermission(editorPolicy.id, collection, action, {});
+  await upsertPermission(editorPolicy.id, "event_interest_responses", "read", {});
+  await upsertPermission(editorPolicy.id, "event_interest_responses", "delete", {});
 }
 console.log(
   "Directus schema and least-privilege public read permissions are configured.",
