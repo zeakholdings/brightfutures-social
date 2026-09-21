@@ -3,7 +3,7 @@ import { getRequestHeaders } from "@tanstack/react-start/server";
 import { createDirectus, createItem, readItems, updateItem, rest, staticToken } from "@directus/sdk";
 import { createHash } from "node:crypto";
 import { z } from "zod";
-import { events as localEvents, type Event } from "@/data/events";
+import { events as localEvents, type Event, type EventInterestOption } from "@/data/events";
 import { checkedResources } from "@/data/resources";
 import { fallbackCommittee, readCommittee } from "./committee";
 import { readPublicEvent, readPublicEvents } from "./events";
@@ -106,9 +106,11 @@ export function toEvent(event: CmsEvent): Event {
   return {
     title: correctedWelcome?.title || event.title,
     slug: event.slug,
-    startDate: event.start_date,
+    startDate: event.start_date || undefined,
     endDate: event.end_date || undefined,
     time: event.time_display || undefined,
+    interestOptions: Array.isArray(event.interest_options) ? event.interest_options : undefined,
+    interestClosesAt: event.interest_closes_at || undefined,
     location: event.location || undefined,
     category: categoryLabels[event.category],
     description: correctedWelcome?.description || event.description || "",
@@ -176,6 +178,232 @@ export async function getEvent(options: {
 }): Promise<Event | null> {
   return getEventServer(options);
 }
+
+const eventInterestText = (maximum: number) =>
+  z
+    .string()
+    .max(maximum)
+    .transform((value) =>
+      value
+        .normalize("NFKC")
+        .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, "")
+        .trim(),
+    );
+
+const eventInterestInput = z.object({
+  eventSlug: z.string().min(1).max(160),
+  attendance: z.enum(["yes", "maybe", "no"]),
+  availability: z.array(z.string().min(1).max(100)).max(20),
+  comment: eventInterestText(1200),
+  email: z.union([z.literal(""), z.string().trim().email().max(254)]),
+  website: z.string().max(0),
+});
+
+function normaliseInterestOptions(value: unknown): EventInterestOption[] {
+  if (!Array.isArray(value)) return [];
+  return value
+    .filter(
+      (option): option is EventInterestOption =>
+        !!option &&
+        typeof option === "object" &&
+        typeof (option as EventInterestOption).id === "string" &&
+        !!(option as EventInterestOption).id.trim() &&
+        typeof (option as EventInterestOption).label === "string" &&
+        !!(option as EventInterestOption).label.trim(),
+    )
+    .map((option) => ({
+      id: option.id.trim().slice(0, 100),
+      label: option.label.trim().slice(0, 220),
+      start: option.start || undefined,
+      end: option.end || undefined,
+    }));
+}
+
+export const submitEventInterest = createServerFn({ method: "POST" })
+  .validator(eventInterestInput)
+  .handler(async ({ data }) => {
+    const event = await readPublicEvent(data.eventSlug);
+    if (!event || event.status !== "interest-check")
+      throw new Error("This interest check is not currently open.");
+
+    if (
+      event.interest_closes_at &&
+      Date.parse(event.interest_closes_at) <= Date.now()
+    )
+      throw new Error("This interest check has now closed.");
+
+    const options = normaliseInterestOptions(event.interest_options);
+    const allowed = new Set(options.map((option) => option.id));
+    if (data.availability.some((id) => !allowed.has(id)))
+      throw new Error("One of the selected times is no longer available.");
+
+    const info = requestInfo(`event-interest:${data.eventSlug}`);
+    const client = privateClient();
+    const existing = (await client.request(
+      readItems("event_interest_responses", {
+        filter: {
+          _and: [
+            { event_slug: { _eq: data.eventSlug } },
+            { ip_hash: { _eq: info.ip_hash } },
+          ],
+        },
+        fields: ["id"],
+        limit: 1,
+      }),
+    )) as Array<{ id: string | number }>;
+
+    const payload = {
+      event_slug: data.eventSlug,
+      attendance: data.attendance,
+      availability: data.attendance === "no" ? [] : data.availability,
+      comment: data.comment || null,
+      email: data.email || null,
+      ...info,
+    };
+
+    if (existing[0]?.id) {
+      await client.request(
+        updateItem("event_interest_responses", existing[0].id, payload),
+      );
+      return { ok: true as const, updated: true as const };
+    }
+
+    await client.request(createItem("event_interest_responses", payload));
+    return { ok: true as const, updated: false as const };
+  });
+
+export interface EventInterestAdminSummary {
+  slug: string;
+  title: string;
+  status: "interest-check" | "confirmed";
+  startDate: string | null;
+  closesAt: string | null;
+  totals: { yes: number; maybe: number; no: number; responses: number };
+  options: Array<{
+    id: string;
+    label: string;
+    yes: number;
+    maybe: number;
+    available: number;
+  }>;
+  bestOptionId: string | null;
+  recent: Array<{
+    id: string;
+    attendance: "yes" | "maybe" | "no";
+    availability: string[];
+    comment: string | null;
+    email: string | null;
+    createdAt: string | null;
+  }>;
+}
+
+function interestAdminToken() {
+  return (
+    process.env.EVENT_INTEREST_ADMIN_TOKEN ||
+    process.env.ART_WALL_ADMIN_TOKEN ||
+    ""
+  );
+}
+
+export const getEventInterestAdmin = createServerFn({ method: "POST" })
+  .validator(z.object({ token: z.string().min(1).max(500) }))
+  .handler(async ({ data }): Promise<EventInterestAdminSummary[]> => {
+    const expected = interestAdminToken();
+    if (!expected || data.token !== expected)
+      throw new Error("That organiser passcode was not recognised.");
+
+    const client = privateClient();
+    const [events, responses] = await Promise.all([
+      client.request(
+        readItems("events", {
+          filter: { status: { _in: ["interest-check", "confirmed"] } },
+          fields: [
+            "title",
+            "slug",
+            "status",
+            "start_date",
+            "interest_options",
+            "interest_closes_at",
+            "date_updated",
+          ],
+          sort: ["-date_updated"],
+          limit: 100,
+        }),
+      ) as Promise<CmsEvent[]>,
+      client.request(
+        readItems("event_interest_responses", {
+          fields: [
+            "id",
+            "event_slug",
+            "attendance",
+            "availability",
+            "comment",
+            "email",
+            "date_created",
+          ],
+          sort: ["-date_created"],
+          limit: 1000,
+        }),
+      ) as Promise<
+        Array<{
+          id: string | number;
+          event_slug: string;
+          attendance: "yes" | "maybe" | "no";
+          availability?: unknown;
+          comment?: string | null;
+          email?: string | null;
+          date_created?: string | null;
+        }>
+      >,
+    ]);
+
+    return events.map((event) => {
+      const options = normaliseInterestOptions(event.interest_options);
+      const rows = responses.filter((row) => row.event_slug === event.slug);
+      const selected = (row: (typeof rows)[number]) =>
+        Array.isArray(row.availability)
+          ? row.availability.filter((value): value is string => typeof value === "string")
+          : [];
+      const optionStats = options.map((option) => {
+        const yes = rows.filter(
+          (row) =>
+            row.attendance === "yes" && selected(row).includes(option.id),
+        ).length;
+        const maybe = rows.filter(
+          (row) =>
+            row.attendance === "maybe" && selected(row).includes(option.id),
+        ).length;
+        return { id: option.id, label: option.label, yes, maybe, available: yes + maybe };
+      });
+      const ranked = [...optionStats].sort(
+        (a, b) => b.yes * 2 + b.maybe - (a.yes * 2 + a.maybe),
+      );
+
+      return {
+        slug: event.slug,
+        title: event.title,
+        status: event.status as "interest-check" | "confirmed",
+        startDate: event.start_date || null,
+        closesAt: event.interest_closes_at || null,
+        totals: {
+          yes: rows.filter((row) => row.attendance === "yes").length,
+          maybe: rows.filter((row) => row.attendance === "maybe").length,
+          no: rows.filter((row) => row.attendance === "no").length,
+          responses: rows.length,
+        },
+        options: optionStats,
+        bestOptionId: ranked[0]?.id || null,
+        recent: rows.slice(0, 40).map((row) => ({
+          id: String(row.id),
+          attendance: row.attendance,
+          availability: selected(row),
+          comment: row.comment || null,
+          email: row.email || null,
+          createdAt: row.date_created || null,
+        })),
+      };
+    });
+  });
 const withPostAsset = (post: Post) => ({
   ...post,
   featured_image: assetUrl(post.featured_image) || null,
