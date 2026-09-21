@@ -27,6 +27,7 @@ import { Route as StoriesRouteImport } from './routes/stories'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as VoiceRouteImport } from './routes/voice'
 import { Route as AdminArtWallRouteImport } from './routes/admin/art-wall'
+import { Route as AdminEventInterestRouteImport } from './routes/admin/event-interest'
 import { Route as ArtWallSlugRouteImport } from './routes/art-wall.$slug'
 import { Route as ArtWallSubmitRouteImport } from './routes/art-wall.submit'
 import { Route as EventsSlugRouteImport } from './routes/events.$slug'
@@ -123,6 +124,11 @@ const AdminArtWallRoute = AdminArtWallRouteImport.update({
   path: '/admin/art-wall',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminEventInterestRoute = AdminEventInterestRouteImport.update({
+  id: '/admin/event-interest',
+  path: '/admin/event-interest',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ArtWallSlugRoute = ArtWallSlugRouteImport.update({
   id: '/$slug',
   path: '/$slug',
@@ -168,6 +174,7 @@ export interface FileRoutesByFullPath {
   '/terms': typeof TermsRoute
   '/voice': typeof VoiceRoute
   '/admin/art-wall': typeof AdminArtWallRoute
+  '/admin/event-interest': typeof AdminEventInterestRoute
   '/art-wall/$slug': typeof ArtWallSlugRoute
   '/art-wall/submit': typeof ArtWallSubmitRoute
   '/events/$slug': typeof EventsSlugRoute
@@ -193,6 +200,7 @@ export interface FileRoutesByTo {
   '/terms': typeof TermsRoute
   '/voice': typeof VoiceRoute
   '/admin/art-wall': typeof AdminArtWallRoute
+  '/admin/event-interest': typeof AdminEventInterestRoute
   '/art-wall/$slug': typeof ArtWallSlugRoute
   '/art-wall/submit': typeof ArtWallSubmitRoute
   '/events/$slug': typeof EventsSlugRoute
@@ -219,6 +227,7 @@ export interface FileRoutesById {
   '/terms': typeof TermsRoute
   '/voice': typeof VoiceRoute
   '/admin/art-wall': typeof AdminArtWallRoute
+  '/admin/event-interest': typeof AdminEventInterestRoute
   '/art-wall/$slug': typeof ArtWallSlugRoute
   '/art-wall/submit': typeof ArtWallSubmitRoute
   '/events/$slug': typeof EventsSlugRoute
@@ -246,6 +255,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/voice'
     | '/admin/art-wall'
+    | '/admin/event-interest'
     | '/art-wall/$slug'
     | '/art-wall/submit'
     | '/events/$slug'
@@ -271,6 +281,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/voice'
     | '/admin/art-wall'
+    | '/admin/event-interest'
     | '/art-wall/$slug'
     | '/art-wall/submit'
     | '/events/$slug'
@@ -296,6 +307,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/voice'
     | '/admin/art-wall'
+    | '/admin/event-interest'
     | '/art-wall/$slug'
     | '/art-wall/submit'
     | '/events/$slug'
@@ -322,6 +334,7 @@ export interface RootRouteChildren {
   TermsRoute: typeof TermsRoute
   VoiceRoute: typeof VoiceRoute
   AdminArtWallRoute: typeof AdminArtWallRoute
+  AdminEventInterestRoute: typeof AdminEventInterestRoute
   PartnershipsPerksRoute: typeof PartnershipsPerksRoute
 }
 
@@ -453,6 +466,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminArtWallRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/event-interest': {
+      id: '/admin/event-interest'
+      path: '/admin/event-interest'
+      fullPath: '/admin/event-interest'
+      preLoaderRoute: typeof AdminEventInterestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/art-wall/$slug': {
       id: '/art-wall/$slug'
       path: '/$slug'
@@ -545,6 +565,7 @@ const rootRouteChildren: RootRouteChildren = {
   TermsRoute: TermsRoute,
   VoiceRoute: VoiceRoute,
   AdminArtWallRoute: AdminArtWallRoute,
+  AdminEventInterestRoute: AdminEventInterestRoute,
   PartnershipsPerksRoute: PartnershipsPerksRoute,
 }
 export const routeTree = rootRouteImport
