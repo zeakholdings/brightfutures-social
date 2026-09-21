@@ -621,6 +621,12 @@ if (process.env.DIRECTUS_CONFIGURE_COMMUNITY_POLICIES === "true") {
   const interestResponseFields = [
     "event_slug", "attendance", "availability", "comment", "email", "ip_hash", "user_agent",
   ];
+  await upsertPermission(
+    servicePolicy.id,
+    "events",
+    "read",
+    { status: { _in: ["interest-check", "confirmed", "completed"] } },
+  );
   await upsertPermission(servicePolicy.id, "event_interest_responses", "create", {}, interestResponseFields);
   await upsertPermission(servicePolicy.id, "event_interest_responses", "read", {}, ["id", ...interestResponseFields, "date_created", "date_updated"]);
   await upsertPermission(servicePolicy.id, "event_interest_responses", "update", {}, interestResponseFields);
